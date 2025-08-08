@@ -76,7 +76,7 @@ class IsometricPathGrid: IsometricGrid {
         }
     }
     
-    // For child overrides
+    // For child overrides - existing methods
     func didAppendStep(_ step: Step) {}
     func didRemoveStep(_ step: Step) {}
     
@@ -107,8 +107,9 @@ class IsometricPathGrid: IsometricGrid {
     
     // Area tracking
     private var currentAreaStartRow: Int = 0
-    private var pendingLeftCells: [Int: [Cell]] = [:]
-    private var pendingRightCells: [Int: [Cell]] = [:]
+    private var pendingLeftCells: [Int: [Cell]] = [:]  // row -> [cells]
+    private var pendingRightCells: [Int: [Cell]] = [:] // row -> [cells]
+    private var filledCells: Set<Point> = [] // Track which cells are already filled
     
     override init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(top: 1, right: .zero, bottom: .zero, left: .zero)) {
         super.init(size: size, cellSize: cellSize, indent: getCorrectIndentFromIndent(indent, size: size, cellSize: cellSize))
@@ -133,6 +134,7 @@ class IsometricPathGrid: IsometricGrid {
         areas.removeAll()
         pendingLeftCells.removeAll()
         pendingRightCells.removeAll()
+        filledCells.removeAll()
         prevStep = nil
         
         let maxColumns = self.maxColumns
@@ -267,31 +269,6 @@ class IsometricPathGrid: IsometricGrid {
         return nil
     }
     
-    override func didRemoveRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
-        super.didRemoveRow(row, cellsOfRow: cellsOfRow)
-        
-        if !steps.isEmpty {
-            let step = steps.removeFirst()
-            didRemoveStep(step)
-        }
-        
-        // Remove areas that are no longer visible
-        let areasToRemove = areas.filter { area in
-            area.endRow <= row
-        }
-        
-        for area in areasToRemove {
-            if let index = areas.firstIndex(where: { $0.id == area.id }) {
-                areas.remove(at: index)
-                didRemoveArea(area)
-            }
-        }
-        
-        // Clean up pending cells for this row
-        pendingLeftCells.removeValue(forKey: row)
-        pendingRightCells.removeValue(forKey: row)
-    }
-    
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
         super.didAppendRow(row, cellsOfRow: cellsOfRow)
         
@@ -305,10 +282,13 @@ class IsometricPathGrid: IsometricGrid {
         generateAreaCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
         
         if isTurn {
-            // Finalize current area before changing sides
-            finalizeCurrentArea(endRow: row)
-            side = side.opposite
+            // Fill the area on the SAME side as current movement direction
+            // If moving left (to left), fill left side. If moving right (to right), fill right side.
+            let fillSide = side
+            fillAreaOnSide(endRow: row, fillSide: fillSide)
             currentAreaStartRow = row
+            
+            side = side.opposite
             calcNextTurnPoint()
         }
         
@@ -326,7 +306,8 @@ class IsometricPathGrid: IsometricGrid {
         
         for cell in cellsOfRow {
             let cellColumn = cell.point.column
-
+            
+            // Skip the path cell itself
             if cellColumn == stepColumn {
                 continue
             }
@@ -342,62 +323,83 @@ class IsometricPathGrid: IsometricGrid {
         if !leftCells.isEmpty {
             pendingLeftCells[row] = leftCells
         }
-
         if !rightCells.isEmpty {
             pendingRightCells[row] = rightCells
         }
     }
     
-    private func finalizeCurrentArea(endRow: Int) {
-        // Create areas for both sides if we have enough rows
-        let rowRange = currentAreaStartRow...endRow
-        
-        if rowRange.count > 1 { // Only create areas with multiple rows
-            // Create left area
-            var leftAreaCells: [Cell] = []
-            for row in rowRange {
-                if let cells = pendingLeftCells[row] {
-                    leftAreaCells.append(contentsOf: cells)
+    private func fillAreaOnSide(endRow: Int, fillSide: Side) {
+        if endRow > currentAreaStartRow {
+            var areaCells: [Cell] = []
+            
+            // Collect ALL unfilled cells from the specified side up to the turn row
+            // Search through ALL pending cells, not just current segment
+            for (row, cells) in (fillSide == .left ? pendingLeftCells : pendingRightCells) {
+                if row <= endRow { // All rows up to and including turn row
+                    for cell in cells {
+                        // Only add cells that haven't been filled yet
+                        if !filledCells.contains(cell.point) {
+                            areaCells.append(cell)
+                            filledCells.insert(cell.point)
+                        }
+                    }
                 }
             }
             
-            if !leftAreaCells.isEmpty {
-                let leftArea = Area(
-                    cells: leftAreaCells,
-                    side: .left,
-                    startRow: currentAreaStartRow,
+            if !areaCells.isEmpty {
+                let area = Area(
+                    cells: areaCells,
+                    side: fillSide,
+                    startRow: areaCells.map { $0.point.row }.min() ?? currentAreaStartRow,
                     endRow: endRow
                 )
-
-                areas.append(leftArea)
-                didAppendArea(leftArea)
-            }
-            
-            // Create right area
-            var rightAreaCells: [Cell] = []
-            for row in rowRange {
-                if let cells = pendingRightCells[row] {
-                    rightAreaCells.append(contentsOf: cells)
-                }
-            }
-            
-            if !rightAreaCells.isEmpty {
-                let rightArea = Area(
-                    cells: rightAreaCells,
-                    side: .right,
-                    startRow: currentAreaStartRow,
-                    endRow: endRow
-                )
-                areas.append(rightArea)
-                didAppendArea(rightArea)
+                areas.append(area)
+                didAppendArea(area)
             }
         }
         
-        // Clean up processed pending cells
-        for row in rowRange {
-            pendingLeftCells.removeValue(forKey: row)
-            pendingRightCells.removeValue(forKey: row)
+        // Clean up processed pending cells for the filled side up to endRow
+        if fillSide == .left {
+            let keysToRemove = pendingLeftCells.keys.filter { $0 <= endRow }
+            for key in keysToRemove {
+                pendingLeftCells.removeValue(forKey: key)
+            }
+        } else {
+            let keysToRemove = pendingRightCells.keys.filter { $0 <= endRow }
+            for key in keysToRemove {
+                pendingRightCells.removeValue(forKey: key)
+            }
         }
+    }
+    
+    override func didRemoveRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
+        super.didRemoveRow(row, cellsOfRow: cellsOfRow)
+        
+        if !steps.isEmpty {
+            let step = steps.removeFirst()
+            didRemoveStep(step)
+        }
+        
+        // Remove areas that are no longer visible
+        let areasToRemove = areas.filter { area in
+            area.endRow <= row
+        }
+        
+        for area in areasToRemove {
+            if let index = areas.firstIndex(where: { $0.id == area.id }) {
+                areas.remove(at: index)
+                didRemoveArea(area)
+                
+                // Remove filled cells from the removed area
+                for cell in area.cells {
+                    filledCells.remove(cell.point)
+                }
+            }
+        }
+        
+        // Clean up pending cells for this row
+        pendingLeftCells.removeValue(forKey: row)
+        pendingRightCells.removeValue(forKey: row)
     }
     
     // Helper methods for working with areas

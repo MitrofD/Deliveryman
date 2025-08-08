@@ -166,15 +166,13 @@ class Grid: SKNode {
     @MainActor required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    @discardableResult
-    func build() -> Bool {
+
+    func build() {
         guard !isFilled else {
-            return false
+            return
         }
 
         reset()
-        return true
     }
     
     func destroy() {
@@ -282,8 +280,15 @@ class Grid: SKNode {
             didBuilt()
         }
     }
+    
+    private func stopAndBuild() {
+        stop()
+        build()
+    }
 
     func moveByStep(duration: TimeInterval, steps: CGFloat? = nil) {
+        stopAndBuild()
+
         var moveDistance = yStep
         var moveDuration = duration
         
@@ -299,8 +304,7 @@ class Grid: SKNode {
     }
     
     func move(distance: CGFloat, duration: TimeInterval? = nil) {
-        stop()
-        build()
+        stopAndBuild()
         
         guard distance > .zero else {
             return

@@ -7,8 +7,9 @@
 
 import SpriteKit
 
-protocol MapProtocol: IsometricPathGrid {
-    var onReady: (_ map: MapProtocol) -> Void { get set }
-
-    init(size: CGSize)
+protocol MapProtocol {
+    init (size: CGSize, onReady: @escaping (_ map: MapProtocol) -> Void)
+    
+    func present()
+    func start()
 }

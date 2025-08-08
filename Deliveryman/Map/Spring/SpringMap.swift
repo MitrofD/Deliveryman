@@ -7,8 +7,7 @@
 
 import SpriteKit
 
-class SpringMap: TexturedMap, MapProtocol {
-    var onReady: (_ any: MapProtocol) -> Void = { _ in }
+class SpringMap: IsometricPathGrid, MapProtocol {
     let groundNode: SKSpriteNode
     let leftPathNode: SKSpriteNode
     let leftPathTurnNode: SKSpriteNode
@@ -19,7 +18,7 @@ class SpringMap: TexturedMap, MapProtocol {
     private var pathNodes: [Point: SKNode] = [:]
     private var areaNodes: [UUID: [SKNode]] = [:]
     
-    required init(size: CGSize) {
+    required init(size: CGSize, onReady: @escaping (_ map: MapProtocol) -> Void) {
         let textureAtlas = SKTextureAtlas(named: "map-spring")
         let cellTexture = textureAtlas.textureNamed("base")
         let cellTextureSize = cellTexture.size()
@@ -33,12 +32,11 @@ class SpringMap: TexturedMap, MapProtocol {
         rightPathNode = SKSpriteNode(texture: textureAtlas.textureNamed("right-path"), size: cellSize)
         rightPathTurnNode = SKSpriteNode(texture: textureAtlas.textureNamed("right-path-turn"), size: cellSize)
 
-        super.init(textureAtlas: textureAtlas, size: size, cellSize: cellSize)
+        super.init(size: size, cellSize: cellSize)
         
-        self.onReadyTexturedMap = { [weak self] in
-            if let self = self {
-                self.onReady(self)
-            }
+        textureAtlas.preload { [weak self] in
+            guard let self = self else { return }
+            onReady(self)
         }
     }
     
@@ -54,14 +52,11 @@ class SpringMap: TexturedMap, MapProtocol {
         fatalError("init(textureAtlas:size:cellSize:) has not been implemented")
     }
     
-    func groundNodeForCell(_ cell: Cell) -> SKNode {
-        let node = SKShapeNode(rectOf: cellSize)
-        node.position = cell.position
-        node.fillColor = .green
-        node.strokeColor = .black
-        node.zPosition = -1
-        
-        return node
+    private func groundNodeForCell(_ cell: Cell) -> SKNode {
+        let nodeClone = groundNode.clone()
+        nodeClone.position = cell.position
+        nodeClone.zPosition = CGFloat(cell.point.row)
+        return nodeClone
     }
     
     private func pathNodeForStep(_ step: IsometricPathGrid.Step) -> SKNode {
@@ -75,34 +70,18 @@ class SpringMap: TexturedMap, MapProtocol {
 
         let nodeClone = node.clone()
         nodeClone.position = step.position
+        nodeClone.zPosition = CGFloat(step.point.row + 1)
 
         return nodeClone
     }
     
-    func areaNodeForCell(_ cell: Cell, area: Area, color: UIColor) -> SKNode {
-        let node = SKShapeNode(rectOf: cellSize)
+    private func areaNodeForCell(_ cell: Cell, area: Area, color: UIColor) -> SKNode {
+        let node = SKShapeNode(circleOfRadius: cellSize.height / 2 / 2)
         node.position = cell.position
         node.strokeColor = .black
-        node.lineWidth = 1.0
-        node.zPosition = 0
-        
-        // Different colors for different sides and areas
-        let baseColor: UIColor = area.side == .left ? .systemBlue : .systemRed
-        
-        // Generate variation based on area ID
-        var hasher = Hasher()
-        hasher.combine(area.id)
-        let hashValue = hasher.finalize()
-        let alpha: CGFloat = 0.3 + (CGFloat(abs(hashValue) % 100) / 100.0 * 0.4) // Vary alpha for different areas
-        node.fillColor = color//  baseColor.withAlphaComponent(alpha)
-        
-        // Add area info label for debugging
-        let label = SKLabelNode(text: "\(area.side == .left ? "L" : "R")")
-        label.fontSize = 8
-        label.fontName = "SFPro-Bold"
-        label.fontColor = .white
-        label.position = CGPoint(x: 0, y: -4)
-        node.addChild(label)
+        node.lineWidth = .zero
+        node.zPosition = CGFloat(cell.point.row + 1)
+        node.fillColor = color
         
         return node
     }
@@ -110,21 +89,30 @@ class SpringMap: TexturedMap, MapProtocol {
     private func willResetedOrBuilt() {
         // Clean path
         pathNodes.values.forEach { node in
-        node.removeFromParent()
+            node.removeFromParent()
         }
         pathNodes.removeAll()
         
         // Clean ground
         groundNodes.values.forEach { node in
-        node.removeFromParent()
+            node.removeFromParent()
         }
         groundNodes.removeAll()
         
         // Clean areas
         areaNodes.values.forEach { nodes in
-        nodes.forEach { $0.removeFromParent() }
+            nodes.forEach { $0.removeFromParent() }
         }
         areaNodes.removeAll()
+    }
+    
+    // MARK: - MapProtocol
+    func present() {
+        build()
+    }
+    
+    func start() {
+        moveByStep(duration: 0.2)
     }
     
     // MARK: - Overrides

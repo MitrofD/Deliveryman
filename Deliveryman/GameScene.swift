@@ -15,16 +15,14 @@ class GameScene: SKScene {
     
     func mapSettings() {
         let mapSize = CGSize(width: size.width, height: size.height)
-        let map = SpringMap(size: mapSize)
+        let map = SpringMap(size: mapSize, onReady: onReadyMap)
         map.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
         self.addChild(map)
-        map.onReady = onReadyMap
-        map.build()
     }
     
     // MARK: - Map hooks
     private func onReadyMap(_ map: MapProtocol) {
-        map.moveByStep(duration: 0.5)
+        map.present()
         /*
         let centerY = size.half.height
         

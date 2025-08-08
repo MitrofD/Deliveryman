@@ -7,8 +7,8 @@
 
 import SpriteKit
 
-protocol MapProtocol: TiledIsometricPathGrid {
-    var onReadyMap: (_ map: MapProtocol) -> Void { get set }
+protocol MapProtocol: IsometricPathGrid {
+    var onReady: (_ map: MapProtocol) -> Void { get set }
 
     init(size: CGSize)
 }

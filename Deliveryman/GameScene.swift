@@ -18,7 +18,7 @@ class GameScene: SKScene {
         let map = SpringMap(size: mapSize)
         map.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
         self.addChild(map)
-        map.onReadyMap = onReadyMap
+        map.onReady = onReadyMap
         map.build()
     }
     

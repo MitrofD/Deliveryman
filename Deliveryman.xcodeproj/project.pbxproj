@@ -19,9 +19,7 @@
 		EF4E36642AD75FE800C9A9AF /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF4E36632AD75FE800C9A9AF /* CGSize.swift */; };
 		EF500343293AB80E00BF9664 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF500342293AB80E00BF9664 /* extensions.swift */; };
 		EF544C172B2095FE000687F7 /* MinNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF544C162B2095FE000687F7 /* MinNumber.swift */; };
-		EF8159562E081FC700929A18 /* TiledIsometricPathGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF8159552E081FC700929A18 /* TiledIsometricPathGrid.swift */; };
 		EF9E92DD2E083E0300BAB94E /* MapProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF9E92DC2E083E0300BAB94E /* MapProtocol.swift */; };
-		EF9E92E22E0840A800BAB94E /* TexturedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF9E92E12E0840A800BAB94E /* TexturedMap.swift */; };
 		EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB6292C229400149F7A /* EasingDeclarations.swift */; };
 		EFA46DBA292C229400149F7A /* easing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB7292C229400149F7A /* easing.swift */; };
 		EFA46DBB292C229400149F7A /* SKEase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB8292C229400149F7A /* SKEase.swift */; };
@@ -32,6 +30,7 @@
 		EFBC266A28ECE2EA005BCCDB /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBC266928ECE2EA005BCCDB /* RootViewController.swift */; };
 		EFBC266F28ECE2EA005BCCDB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFBC266E28ECE2EA005BCCDB /* Assets.xcassets */; };
 		EFBC267228ECE2EA005BCCDB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFBC267028ECE2EA005BCCDB /* LaunchScreen.storyboard */; };
+		EFF778DA2E46460700E43982 /* TexturedMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF778D92E46460700E43982 /* TexturedMap.swift */; };
 		EFFEDC052B188910009BAC70 /* Season.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFEDC042B188910009BAC70 /* Season.swift */; };
 /* End PBXBuildFile section */
 
@@ -48,9 +47,7 @@
 		EF4E36632AD75FE800C9A9AF /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		EF500342293AB80E00BF9664 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		EF544C162B2095FE000687F7 /* MinNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinNumber.swift; sourceTree = "<group>"; };
-		EF8159552E081FC700929A18 /* TiledIsometricPathGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TiledIsometricPathGrid.swift; sourceTree = "<group>"; };
 		EF9E92DC2E083E0300BAB94E /* MapProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapProtocol.swift; sourceTree = "<group>"; };
-		EF9E92E12E0840A800BAB94E /* TexturedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TexturedMap.swift; sourceTree = "<group>"; };
 		EFA46DB6292C229400149F7A /* EasingDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EasingDeclarations.swift; sourceTree = "<group>"; };
 		EFA46DB7292C229400149F7A /* easing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = easing.swift; sourceTree = "<group>"; };
 		EFA46DB8292C229400149F7A /* SKEase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SKEase.swift; sourceTree = "<group>"; };
@@ -62,6 +59,7 @@
 		EFBC266928ECE2EA005BCCDB /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		EFBC266E28ECE2EA005BCCDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFBC267128ECE2EA005BCCDB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		EFF778D92E46460700E43982 /* TexturedMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TexturedMap.swift; sourceTree = "<group>"; };
 		EFFEDC042B188910009BAC70 /* Season.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Season.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -124,9 +122,8 @@
 				EF2B96912CA9667100FDFBA9 /* IsometricPathGrid.swift */,
 				EF2B968D2CA75F9C00FDFBA9 /* IsometricGrid.swift */,
 				EF2B968B2CA75EB800FDFBA9 /* Grid.swift */,
-				EF8159552E081FC700929A18 /* TiledIsometricPathGrid.swift */,
 				EF9E92DC2E083E0300BAB94E /* MapProtocol.swift */,
-				EF9E92E12E0840A800BAB94E /* TexturedMap.swift */,
+				EFF778D92E46460700E43982 /* TexturedMap.swift */,
 			);
 			path = Map;
 			sourceTree = "<group>";
@@ -288,11 +285,11 @@
 				EF4E36642AD75FE800C9A9AF /* CGSize.swift in Sources */,
 				EF2B96922CA9667100FDFBA9 /* IsometricPathGrid.swift in Sources */,
 				EFBC266828ECE2EA005BCCDB /* GameScene.swift in Sources */,
+				EFF778DA2E46460700E43982 /* TexturedMap.swift in Sources */,
 				EFBC266A28ECE2EA005BCCDB /* RootViewController.swift in Sources */,
 				EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */,
 				EFFEDC052B188910009BAC70 /* Season.swift in Sources */,
 				EFA46DBB292C229400149F7A /* SKEase.swift in Sources */,
-				EF8159562E081FC700929A18 /* TiledIsometricPathGrid.swift in Sources */,
 				EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */,
 				EFB7E2C62A2BF53C0026E378 /* UIDelegate.swift in Sources */,
 				EFBC266228ECE2EA005BCCDB /* AppDelegate.swift in Sources */,
@@ -302,7 +299,6 @@
 				EFB7E2C42A2BF0FD0026E378 /* UI.swift in Sources */,
 				EF500343293AB80E00BF9664 /* extensions.swift in Sources */,
 				EF326EB12ACEC13100E49C73 /* SKNode.swift in Sources */,
-				EF9E92E22E0840A800BAB94E /* TexturedMap.swift in Sources */,
 				EF2790212924655D00A59386 /* SpaghettiBoyCharacter.swift in Sources */,
 				EF28128E292305B0000E445B /* Character.swift in Sources */,
 				EFA46DBA292C229400149F7A /* easing.swift in Sources */,

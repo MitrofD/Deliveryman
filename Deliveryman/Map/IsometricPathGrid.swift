@@ -48,9 +48,41 @@ class IsometricPathGrid: IsometricGrid {
         }
     }
     
+    class Area: CustomStringConvertible {
+        let cells: [Cell]
+        let side: Side
+        let startRow: Int
+        let endRow: Int
+        let id: UUID
+        
+        init(cells: [Cell], side: Side, startRow: Int, endRow: Int) {
+            self.cells = cells
+            self.side = side
+            self.startRow = startRow
+            self.endRow = endRow
+            self.id = UUID()
+        }
+        
+        var description: String {
+            return "Area(id: \(id.uuidString.prefix(8)), side: \(side), rows: \(startRow)-\(endRow), cells: \(cells.count))"
+        }
+        
+        var rowRange: ClosedRange<Int> {
+            return startRow...endRow
+        }
+        
+        func containsRow(_ row: Int) -> Bool {
+            return rowRange.contains(row)
+        }
+    }
+    
     // For child overrides
     func didAppendStep(_ step: Step) {}
     func didRemoveStep(_ step: Step) {}
+    
+    // New methods for areas
+    func didAppendArea(_ area: Area) {}
+    func didRemoveArea(_ area: Area) {}
     
     override var indent: Grid.Indent {
         get {
@@ -63,6 +95,7 @@ class IsometricPathGrid: IsometricGrid {
     }
 
     private(set) var steps = [Step]()
+    private(set) var areas = [Area]()
     private(set) var side = Side.left
 
     private var calcNextTurnPoint: () -> Void = { }
@@ -71,7 +104,11 @@ class IsometricPathGrid: IsometricGrid {
     private var prevStep: Step?
     private var stepPoint = Point.zero
     private var turnPoint = Point.zero
-    // private var tiles: [[SKSpriteNode]] = []
+    
+    // Area tracking
+    private var currentAreaStartRow: Int = 0
+    private var pendingLeftCells: [Int: [Cell]] = [:]
+    private var pendingRightCells: [Int: [Cell]] = [:]
     
     override init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(top: 1, right: .zero, bottom: .zero, left: .zero)) {
         super.init(size: size, cellSize: cellSize, indent: getCorrectIndentFromIndent(indent, size: size, cellSize: cellSize))
@@ -93,6 +130,9 @@ class IsometricPathGrid: IsometricGrid {
     
     private func willResetedOrBuilt() {
         steps.removeAll()
+        areas.removeAll()
+        pendingLeftCells.removeAll()
+        pendingRightCells.removeAll()
         prevStep = nil
         
         let maxColumns = self.maxColumns
@@ -102,6 +142,8 @@ class IsometricPathGrid: IsometricGrid {
         stepPoint.row = indent.bottom
         stepPoint.column = Int.random(in: indent.left..<maxColumns)
         side = stepPoint.column < centerColumn ? .right : .left
+        
+        currentAreaStartRow = stepPoint.row
 
         calcNextTurnPoint()
     }
@@ -232,6 +274,22 @@ class IsometricPathGrid: IsometricGrid {
             let step = steps.removeFirst()
             didRemoveStep(step)
         }
+        
+        // Remove areas that are no longer visible
+        let areasToRemove = areas.filter { area in
+            area.endRow <= row
+        }
+        
+        for area in areasToRemove {
+            if let index = areas.firstIndex(where: { $0.id == area.id }) {
+                areas.remove(at: index)
+                didRemoveArea(area)
+            }
+        }
+        
+        // Clean up pending cells for this row
+        pendingLeftCells.removeValue(forKey: row)
+        pendingRightCells.removeValue(forKey: row)
     }
     
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
@@ -243,8 +301,14 @@ class IsometricPathGrid: IsometricGrid {
         prevStep = step
         appendStep(step)
 
+        // Generate area cells for current row
+        generateAreaCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
+        
         if isTurn {
+            // Finalize current area before changing sides
+            finalizeCurrentArea(endRow: row)
             side = side.opposite
+            currentAreaStartRow = row
             calcNextTurnPoint()
         }
         
@@ -254,5 +318,98 @@ class IsometricPathGrid: IsometricGrid {
     private func appendStep(_ step: Step) {
         steps.append(step)
         didAppendStep(step)
+    }
+    
+    private func generateAreaCellsForRow(_ row: Int, stepColumn: Int, cellsOfRow: [Grid.Cell]) {
+        var leftCells: [Cell] = []
+        var rightCells: [Cell] = []
+        
+        for cell in cellsOfRow {
+            let cellColumn = cell.point.column
+
+            if cellColumn == stepColumn {
+                continue
+            }
+            
+            if cellColumn < stepColumn {
+                leftCells.append(cell)
+            } else {
+                rightCells.append(cell)
+            }
+        }
+        
+        // Store pending cells
+        if !leftCells.isEmpty {
+            pendingLeftCells[row] = leftCells
+        }
+
+        if !rightCells.isEmpty {
+            pendingRightCells[row] = rightCells
+        }
+    }
+    
+    private func finalizeCurrentArea(endRow: Int) {
+        // Create areas for both sides if we have enough rows
+        let rowRange = currentAreaStartRow...endRow
+        
+        if rowRange.count > 1 { // Only create areas with multiple rows
+            // Create left area
+            var leftAreaCells: [Cell] = []
+            for row in rowRange {
+                if let cells = pendingLeftCells[row] {
+                    leftAreaCells.append(contentsOf: cells)
+                }
+            }
+            
+            if !leftAreaCells.isEmpty {
+                let leftArea = Area(
+                    cells: leftAreaCells,
+                    side: .left,
+                    startRow: currentAreaStartRow,
+                    endRow: endRow
+                )
+
+                areas.append(leftArea)
+                didAppendArea(leftArea)
+            }
+            
+            // Create right area
+            var rightAreaCells: [Cell] = []
+            for row in rowRange {
+                if let cells = pendingRightCells[row] {
+                    rightAreaCells.append(contentsOf: cells)
+                }
+            }
+            
+            if !rightAreaCells.isEmpty {
+                let rightArea = Area(
+                    cells: rightAreaCells,
+                    side: .right,
+                    startRow: currentAreaStartRow,
+                    endRow: endRow
+                )
+                areas.append(rightArea)
+                didAppendArea(rightArea)
+            }
+        }
+        
+        // Clean up processed pending cells
+        for row in rowRange {
+            pendingLeftCells.removeValue(forKey: row)
+            pendingRightCells.removeValue(forKey: row)
+        }
+    }
+    
+    // Helper methods for working with areas
+    func areasContaining(row: Int) -> [Area] {
+        return areas.filter { $0.containsRow(row) }
+    }
+    
+    func areasOnSide(_ side: Side) -> [Area] {
+        return areas.filter { $0.side == side }
+    }
+    
+    func area(withId id: UUID) -> Area? {
+        return areas.first { $0.id == id }
     }
 }

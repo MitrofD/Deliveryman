@@ -16,8 +16,9 @@ fileprivate func getCorrectIndentFromIndent(_ indent: Grid.Indent, size: CGSize,
 }
 
 class IsometricPathGrid: IsometricGrid {
-    enum Side {
-        case left, right
+    enum Side: String {
+        case left = "left"
+        case right = "right"
         
         static var random: Side {
             let directions = [Side.left, Side.right]

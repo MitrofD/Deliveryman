@@ -15,13 +15,11 @@ class RootViewController: UIViewController {
         super.viewDidLoad()
         skViewSettings()
         view = skView
-
         presentGameScene()
     }
     
     func presentGameScene() {
         let scene = GameScene(size: skView.frame.size)
-        // scene.map = TexturedTiledMap(named: "map-spring", size: scene.size, columns: 3, isMirrored: true)
         skView.presentScene(scene)
     }
     

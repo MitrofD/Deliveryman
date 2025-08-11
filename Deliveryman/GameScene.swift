@@ -8,6 +8,8 @@
 import SpriteKit
 
 class GameScene: SKScene {
+    var currentMap: MapProtocol?
+
     override func sceneDidLoad() {
         super.sceneDidLoad()
         mapSettings()
@@ -15,14 +17,17 @@ class GameScene: SKScene {
     
     func mapSettings() {
         let mapSize = CGSize(width: size.width, height: size.height)
-        let map = SpringMap(size: mapSize, onReady: onReadyMap)
+        let map = SpringMap(size: mapSize)
+        currentMap = map
         map.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
-        self.addChild(map)
+        map.loadPreviewAssets(onReadyMap)
     }
     
     // MARK: - Map hooks
     private func onReadyMap(_ map: MapProtocol) {
-        map.present()
+        print("onReadyMap")
+        addChild(map)
+        map.preview()
         /*
         let centerY = size.half.height
         

@@ -23,6 +23,7 @@ fileprivate func getCorrectIndentFromIndent(_ indent: Grid.Indent, size: CGSize,
 
 class MapGrid: IsometricGrid {
     private var baseIndent: Indent
+    private var stepsByPoint: [Point: Step] = [:]
     
     enum Side: String {
         case left
@@ -57,23 +58,21 @@ class MapGrid: IsometricGrid {
         }
     }
     
-    class Zone: CustomStringConvertible {
+    class Zone: CustomStringConvertible, Hashable {
         let cells: [Cell]
         let side: Side
         let startRow: Int
         let endRow: Int
-        let id: UUID
         
         init(cells: [Cell], side: Side, startRow: Int, endRow: Int) {
             self.cells = cells
             self.side = side
             self.startRow = startRow
             self.endRow = endRow
-            self.id = UUID()
         }
         
         var description: String {
-            return "Area(id: \(id.uuidString.prefix(8)), side: \(side), rows: \(startRow)-\(endRow), cells: \(cells.count))"
+            return "Area(side: \(side), rows: \(startRow)-\(endRow), cells: \(cells.count))"
         }
         
         var rowRange: ClosedRange<Int> {
@@ -82,6 +81,16 @@ class MapGrid: IsometricGrid {
         
         func containsRow(_ row: Int) -> Bool {
             return rowRange.contains(row)
+        }
+        
+        // MARK: - Hashable
+        static func == (lhs: Zone, rhs: Zone) -> Bool {
+            return lhs.startRow == rhs.startRow && lhs.side == rhs.side
+        }
+        
+        func hash(into hasher: inout Hasher) {
+            hasher.combine(startRow)
+            hasher.combine(side)
         }
     }
     
@@ -113,7 +122,7 @@ class MapGrid: IsometricGrid {
     }
 
     private(set) var steps = [Step]()
-    private(set) var areas = [Zone]()
+    private(set) var zones = [Zone]()
     private(set) var side = Side.left
 
     private var calcNextTurnPoint: () -> Void = { }
@@ -124,13 +133,13 @@ class MapGrid: IsometricGrid {
     private var turnPoint = Point.zero
     
     // Area tracking
-    private var currentAreaStartRow: Int = 0
+    private var currentZoneStartRow: Int = 0
     private var pendingLeftCells: [Int: [Cell]] = [:]  // row -> [cells]
     private var pendingRightCells: [Int: [Cell]] = [:] // row -> [cells]
     private var filledCells: Set<Point> = [] // Track which cells are already filled
     
-    // Zone exit optimization
-    private var zonesStartedExiting: Set<UUID> = []
+    // Zone exit optimization - теперь используем Zone как ключ
+    private var zonesStartedExiting: Set<Zone> = []
     private var zonesByStartRow: [Int: [Zone]] = [:]  // O(1) lookup by start row
     
     override init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(top: 1, right: .zero, bottom: .zero, left: .zero)) {
@@ -154,12 +163,13 @@ class MapGrid: IsometricGrid {
     
     private func willResetedOrBuilt() {
         steps.removeAll()
-        areas.removeAll()
+        zones.removeAll()
         pendingLeftCells.removeAll()
         pendingRightCells.removeAll()
         filledCells.removeAll()
         zonesStartedExiting.removeAll()
         zonesByStartRow.removeAll()
+        stepsByPoint.removeAll()
         prevStep = nil
         
         let maxColumns = self.maxColumns
@@ -170,7 +180,7 @@ class MapGrid: IsometricGrid {
         stepPoint.column = Int.random(in: indent.left..<maxColumns)
         side = stepPoint.column < centerColumn ? .right : .left
         
-        currentAreaStartRow = stepPoint.row
+        currentZoneStartRow = stepPoint.row
 
         calcNextTurnPoint()
     }
@@ -307,7 +317,7 @@ class MapGrid: IsometricGrid {
         if isTurn {
             let fillSide = side
             fillAreaOnSide(endRow: row, fillSide: fillSide)
-            currentAreaStartRow = row
+            currentZoneStartRow = row
             side = side.opposite
             calcNextTurnPoint()
         }
@@ -317,6 +327,7 @@ class MapGrid: IsometricGrid {
     
     private func appendStep(_ step: Step) {
         steps.append(step)
+        stepsByPoint[step.point] = step
         didAppendStep(step)
     }
     
@@ -348,7 +359,7 @@ class MapGrid: IsometricGrid {
     }
     
     private func fillAreaOnSide(endRow: Int, fillSide: Side) {
-        if endRow > currentAreaStartRow {
+        if endRow > currentZoneStartRow {
             var areaCells: [Cell] = []
 
             for (row, cells) in (fillSide == .left ? pendingLeftCells : pendingRightCells) {
@@ -366,11 +377,11 @@ class MapGrid: IsometricGrid {
                 let area = Zone(
                     cells: areaCells,
                     side: fillSide,
-                    startRow: areaCells.map { $0.point.row }.min() ?? currentAreaStartRow,
+                    startRow: areaCells.map { $0.point.row }.min() ?? currentZoneStartRow,
                     endRow: endRow
                 )
 
-                areas.append(area)
+                zones.append(area)
                 
                 // 🚀 OPTIMIZATION: Add to lookup cache
                 if zonesByStartRow[area.startRow] == nil {
@@ -402,14 +413,15 @@ class MapGrid: IsometricGrid {
         
         if !steps.isEmpty {
             let step = steps.removeFirst()
+            stepsByPoint.removeValue(forKey: step.point)
             didRemoveStep(step)
         }
 
         // 🚀 OPTIMIZATION: O(1) lookup instead of O(n) filtering
         if let zonesAtThisRow = zonesByStartRow[row] {
             for zone in zonesAtThisRow {
-                if !zonesStartedExiting.contains(zone.id) {
-                    zonesStartedExiting.insert(zone.id)
+                if !zonesStartedExiting.contains(zone) {
+                    zonesStartedExiting.insert(zone)
                     willRemoveZone(zone)
                 }
             }
@@ -417,21 +429,32 @@ class MapGrid: IsometricGrid {
             zonesByStartRow.removeValue(forKey: row)
         }
         
-        // Find zones that are completely out of bounds
-        let zonesToRemove = areas.filter { zone in
-            zone.endRow <= row
+        
+        // 🚀 НОВОЕ: Batch удаление зон за один проход - O(n)
+        var indicesToRemove: [Int] = []
+        var zonesToRemove: [Zone] = []
+        
+        // Собираем все индексы для удаления за один проход
+        for (index, zone) in zones.enumerated() {
+            if zone.endRow <= row {
+                indicesToRemove.append(index)
+                zonesToRemove.append(zone)
+            }
         }
         
-        // Remove completely exited zones
+        // Удаляем элементы в обратном порядке, чтобы индексы не сбились
+        for index in indicesToRemove.reversed() {
+            zones.remove(at: index)
+        }
+        
+        // Очищаем связанные данные
         for zone in zonesToRemove {
-            if let index = areas.firstIndex(where: { $0.id == zone.id }) {
-                areas.remove(at: index)
-                zonesStartedExiting.remove(zone.id)
-                didRemoveZone(zone)
-
-                for cell in zone.cells {
-                    filledCells.remove(cell.point)
-                }
+            zonesStartedExiting.remove(zone)
+            didRemoveZone(zone)
+            
+            // Очищаем filledCells для этой зоны
+            for cell in zone.cells {
+                filledCells.remove(cell.point)
             }
         }
 
@@ -440,15 +463,19 @@ class MapGrid: IsometricGrid {
     }
     
     // MARK: - Helper methods for working with areas
-    func areasContaining(row: Int) -> [Zone] {
-        return areas.filter { $0.containsRow(row) }
+    func zoneContaining(row: Int) -> [Zone] {
+        return zones.filter { $0.containsRow(row) }
     }
     
-    func areasOnSide(_ side: Side) -> [Zone] {
-        return areas.filter { $0.side == side }
+    func zoneOnSide(_ side: Side) -> [Zone] {
+        return zones.filter { $0.side == side }
     }
     
-    func area(withId id: UUID) -> Zone? {
-        return areas.first { $0.id == id }
+    func zone(matching zone: Zone) -> Zone? {
+        return zones.first { $0 == zone }
+    }
+    
+    func step(at point: Point) -> Step? {
+        return stepsByPoint[point]
     }
 }

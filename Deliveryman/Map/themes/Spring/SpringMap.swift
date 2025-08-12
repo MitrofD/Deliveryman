@@ -7,16 +7,10 @@
 import SpriteKit
 
 class SpringMap: MapGrid, MapProtocol {
-    // MARK: - PathItem Structure
-    struct PathItem {
-        let step: MapGrid.Step
-        let node: SKNode
-    }
-    
     // MARK: - Properties
-    private var tileSprites: [Point: SKNode] = [:]
-    private var pathItems: [Point: PathItem] = [:]  // Храним и step, и node
-    private var zones: [UUID: SpringZone] = [:]
+    private(set) var tileNodes: [Point: SKNode] = [:]
+    private(set) var pathNodes: [Step: SKNode] = [:]
+    private(set) var zoneNodes: [Zone: SpringZone] = [:]
     
     required init(size: CGSize) {
         super.init(size: size, cellSize: .zero)
@@ -48,23 +42,23 @@ class SpringMap: MapGrid, MapProtocol {
     }
     
     private func willResetedOrBuilt() {
-        // Clean path items
-        pathItems.values.forEach { pathItem in
-            pathItem.node.removeFromParent()
-        }
-        pathItems.removeAll()
-        
-        // Clean ground
-        tileSprites.values.forEach { node in
+        // Clean path nodes
+        pathNodes.values.forEach { node in
             node.removeFromParent()
         }
-        tileSprites.removeAll()
+        pathNodes.removeAll()
+        
+        // Clean ground
+        tileNodes.values.forEach { node in
+            node.removeFromParent()
+        }
+        tileNodes.removeAll()
         
         // Clean zones
-        zones.values.forEach { springZone in
-            springZone.removeFromParent()
+        zoneNodes.values.forEach { zone in
+            zone.removeFromParent()
         }
-        zones.removeAll()
+        zoneNodes.removeAll()
     }
     
     // MARK: - MapProtocol
@@ -109,7 +103,7 @@ class SpringMap: MapGrid, MapProtocol {
     
         cellsOfRow.forEach { cell in
             let node = tileNodeForCell(cell)
-            tileSprites[cell.point] = node
+            tileNodes[cell.point] = node
             gridNode.addChild(node)
         }
     }
@@ -118,9 +112,9 @@ class SpringMap: MapGrid, MapProtocol {
         super.didRemoveRow(row, cellsOfRow: cellsOfRow)
         
         cellsOfRow.forEach { cell in
-            if let node = tileSprites[cell.point] {
+            if let node = tileNodes[cell.point] {
                 node.removeFromParent()
-                tileSprites.removeValue(forKey: cell.point)
+                tileNodes.removeValue(forKey: cell.point)
             }
         }
     }
@@ -129,27 +123,25 @@ class SpringMap: MapGrid, MapProtocol {
         super.didAppendStep(step)
         
         let node = pathNodeForStep(step)
-        let pathItem = PathItem(step: step, node: node)
-        
         gridNode.addChild(node)
-        pathItems[step.point] = pathItem
+        pathNodes[step] = node // Step как ключ
     }
     
     override func didRemoveStep(_ step: Step) {
         super.didRemoveStep(step)
         
-        if let pathItem = pathItems[step.point] {
-            pathItem.node.removeFromParent()
-            pathItems.removeValue(forKey: step.point)
+        if let node = pathNodes[step] {
+            node.removeFromParent()
+            pathNodes.removeValue(forKey: step)
         }
     }
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
 
-        let springZone = SpringZone(zone: zone, cellSize: cellSize, pathItems: pathItems)
+        let springZone = SpringZone(zone: zone, cellSize: cellSize, map: self)
         gridNode.addChild(springZone)
-        zones[zone.id] = springZone
+        zoneNodes[zone] = springZone
     }
     
     override func willRemoveZone(_ zone: MapGrid.Zone) {
@@ -159,9 +151,9 @@ class SpringMap: MapGrid, MapProtocol {
     override func didRemoveZone(_ zone: Zone) {
         super.didRemoveZone(zone)
 
-        if let springZone = zones[zone.id] {
+        if let springZone = zoneNodes[zone] {
             springZone.removeFromParent()
-            zones.removeValue(forKey: zone.id)
+            zoneNodes.removeValue(forKey: zone)
         }
     }
 }

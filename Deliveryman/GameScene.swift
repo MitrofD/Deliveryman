@@ -20,12 +20,11 @@ class GameScene: SKScene {
         let map = SpringMap(size: mapSize)
         currentMap = map
         map.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
-        map.loadPreviewAssets(onReadyMap)
+        map.loadPreviewAssets(onLoadedMapPreview)
     }
     
     // MARK: - Map hooks
-    private func onReadyMap(_ map: MapProtocol) {
-        print("onReadyMap")
+    private func onLoadedMapPreview(_ map: MapProtocol) {
         addChild(map)
         map.preview()
         /*

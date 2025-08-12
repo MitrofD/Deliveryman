@@ -7,13 +7,13 @@
 
 import SpriteKit
 
-class SpringMap: IsometricPathGrid, MapProtocol {
+class SpringMap: MapGrid, MapProtocol {
     private var tileSprites: [Point: SKNode] = [:]
     private var pathSprites: [Point: SKNode] = [:]
-    private var areaSprites: [UUID: [SKNode]] = [:]
+    private var zoneSprites: [UUID: [SKNode]] = [:]
     
     required init(size: CGSize) {
-        super.init(size: size, cellSize: CGSize(width: 258, height: 154))
+        super.init(size: size, cellSize: .zero)
     }
     
     @MainActor required init?(coder aDecoder: NSCoder) {
@@ -36,7 +36,7 @@ class SpringMap: IsometricPathGrid, MapProtocol {
         return node
     }
     
-    private func pathNodeForStep(_ step: IsometricPathGrid.Step) -> SKNode {
+    private func pathNodeForStep(_ step: MapGrid.Step) -> SKNode {
         let pathName = step.isTurn
             ? "turn_\(step.side.opposite.rawValue)"
             : step.side.rawValue
@@ -49,14 +49,13 @@ class SpringMap: IsometricPathGrid, MapProtocol {
         return node
     }
     
-    private func areaNodeForCell(_ cell: Cell, area: Area, color: UIColor) -> SKNode {
+    private func zoneNodeForCell(_ cell: Cell, area: Zone, color: UIColor) -> SKNode {
         let node = SKShapeNode(circleOfRadius: cellSize.height / 2 / 2)
         node.position = cell.position
         node.strokeColor = .black
         node.lineWidth = .zero
         node.zPosition = CGFloat(cell.point.row + 1)
         node.fillColor = color
-        
         return node
     }
     
@@ -65,28 +64,29 @@ class SpringMap: IsometricPathGrid, MapProtocol {
         pathSprites.values.forEach { node in
             node.removeFromParent()
         }
+
         pathSprites.removeAll()
         
         // Clean ground
         tileSprites.values.forEach { node in
             node.removeFromParent()
         }
+
         tileSprites.removeAll()
         
         // Clean areas
-        areaSprites.values.forEach { nodes in
+        zoneSprites.values.forEach { nodes in
             nodes.forEach { $0.removeFromParent() }
         }
 
-        areaSprites.removeAll()
+        zoneSprites.removeAll()
     }
     
     // MARK: - MapProtocol
     func loadPreviewAssets(_ completion: @escaping (any MapProtocol) -> Void) {
         AtlasManager.shared.loadAtlases(for: Self.themeName, atlasNames: ["Tiles", "Paths"]) { [weak self] _ in
             guard let self = self else { return }
-            
-            print("AtlasManager.shared.loadAtlases")
+
             let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.themeName)
             let cellTextureSize = texture.size()
             let cellWidth = size.width / (CGFloat(5))
@@ -153,26 +153,26 @@ class SpringMap: IsometricPathGrid, MapProtocol {
         pathSprites.removeValue(forKey: step.point)
     }
     
-    override func didAppendArea(_ area: Area) {
-        super.didAppendArea(area)
+    override func didAppendZone(_ zone: Zone) {
+        super.didAppendZone(zone)
         var nodes: [SKNode] = []
         let color = UIColor.random
 
-        for cell in area.cells {
-            let node = areaNodeForCell(cell, area: area, color: color)
+        for cell in zone.cells {
+            let node = zoneNodeForCell(cell, area: zone, color: color)
             gridNode.addChild(node)
             nodes.append(node)
         }
         
-        areaSprites[area.id] = nodes
+        zoneSprites[zone.id] = nodes
     }
         
-    override func didRemoveArea(_ area: Area) {
-        super.didRemoveArea(area)
+    override func didRemoveZone(_ zone: Zone) {
+        super.didRemoveZone(zone)
         
-        if let nodes = areaSprites[area.id] {
+        if let nodes = zoneSprites[zone.id] {
             nodes.forEach { $0.removeFromParent()}
-            areaSprites.removeValue(forKey: area.id)
+            zoneSprites.removeValue(forKey: zone.id)
         }
     }
 }

@@ -102,7 +102,6 @@ class AtlasManager {
     
     /// Очищает весь кеш атласов
     func clearAll() {
-        let count = loadedAtlases.count
         loadedAtlases.removeAll()
     }
     

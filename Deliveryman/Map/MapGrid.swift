@@ -1,5 +1,5 @@
 //
-//  IsometricPathGrid.swift
+//  MapGrid.swift
 //  Deliveryman
 //
 //  Created by Dmitriy Mitrofansky on 29.09.24.
@@ -8,17 +8,25 @@
 import SpriteKit
 
 fileprivate func getIndentTop(size: CGSize, cellSize: CGSize) -> Int {
-    return Int(ceil(size.width / cellSize.width)) * 3
+    let multiplicator = Int(3)
+
+    guard cellSize.width > .zero else {
+        return multiplicator
+    }
+
+    return Int(ceil(size.width / cellSize.width)) * multiplicator
 }
 
 fileprivate func getCorrectIndentFromIndent(_ indent: Grid.Indent, size: CGSize, cellSize: CGSize) -> Grid.Indent {
     return Grid.Indent(top: indent.top + getIndentTop(size: size, cellSize: cellSize), right: indent.right, bottom: indent.bottom, left: indent.left)
 }
 
-class IsometricPathGrid: IsometricGrid {
+class MapGrid: IsometricGrid {
+    private var baseIndent: Indent
+    
     enum Side: String {
-        case left = "left"
-        case right = "right"
+        case left
+        case right
         
         static var random: Side {
             let directions = [Side.left, Side.right]
@@ -49,7 +57,7 @@ class IsometricPathGrid: IsometricGrid {
         }
     }
     
-    class Area: CustomStringConvertible {
+    class Zone: CustomStringConvertible {
         let cells: [Cell]
         let side: Side
         let startRow: Int
@@ -81,22 +89,30 @@ class IsometricPathGrid: IsometricGrid {
     func didAppendStep(_ step: Step) {}
     func didRemoveStep(_ step: Step) {}
     
-    // New methods for areas
-    func didAppendArea(_ area: Area) {}
-    func didRemoveArea(_ area: Area) {}
+    // New methods for zones
+    func didAppendZone(_ zone: Zone) {}
+    func didRemoveZone(_ zone: Zone) {}
     
     override var indent: Grid.Indent {
         get {
             return super.indent
         }
         
-        set(newIndent) {
-            super.indent = getCorrectIndentFromIndent(newIndent, size: size, cellSize: cellSize)
+        set {
+            baseIndent = newValue
+            super.indent = getCorrectIndentFromIndent(newValue, size: size, cellSize: cellSize)
+        }
+    }
+    
+    override var cellSize: CGSize {
+        didSet {
+            let correctedIndent = getCorrectIndentFromIndent(baseIndent, size: size, cellSize: cellSize)
+            super.indent = correctedIndent
         }
     }
 
     private(set) var steps = [Step]()
-    private(set) var areas = [Area]()
+    private(set) var areas = [Zone]()
     private(set) var side = Side.left
 
     private var calcNextTurnPoint: () -> Void = { }
@@ -113,6 +129,7 @@ class IsometricPathGrid: IsometricGrid {
     private var filledCells: Set<Point> = [] // Track which cells are already filled
     
     override init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(top: 1, right: .zero, bottom: .zero, left: .zero)) {
+        self.baseIndent = indent
         super.init(size: size, cellSize: cellSize, indent: getCorrectIndentFromIndent(indent, size: size, cellSize: cellSize))
     }
     
@@ -278,17 +295,12 @@ class IsometricPathGrid: IsometricGrid {
         prevStep?.next = step
         prevStep = step
         appendStep(step)
-
-        // Generate area cells for current row
         generateAreaCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
         
         if isTurn {
-            // Fill the area on the SAME side as current movement direction
-            // If moving left (to left), fill left side. If moving right (to right), fill right side.
             let fillSide = side
             fillAreaOnSide(endRow: row, fillSide: fillSide)
             currentAreaStartRow = row
-            
             side = side.opposite
             calcNextTurnPoint()
         }
@@ -307,8 +319,7 @@ class IsometricPathGrid: IsometricGrid {
         
         for cell in cellsOfRow {
             let cellColumn = cell.point.column
-            
-            // Skip the path cell itself
+
             if cellColumn == stepColumn {
                 continue
             }
@@ -319,11 +330,11 @@ class IsometricPathGrid: IsometricGrid {
                 rightCells.append(cell)
             }
         }
-        
-        // Store pending cells
+
         if !leftCells.isEmpty {
             pendingLeftCells[row] = leftCells
         }
+
         if !rightCells.isEmpty {
             pendingRightCells[row] = rightCells
         }
@@ -332,13 +343,10 @@ class IsometricPathGrid: IsometricGrid {
     private func fillAreaOnSide(endRow: Int, fillSide: Side) {
         if endRow > currentAreaStartRow {
             var areaCells: [Cell] = []
-            
-            // Collect ALL unfilled cells from the specified side up to the turn row
-            // Search through ALL pending cells, not just current segment
+
             for (row, cells) in (fillSide == .left ? pendingLeftCells : pendingRightCells) {
-                if row <= endRow { // All rows up to and including turn row
+                if row <= endRow {
                     for cell in cells {
-                        // Only add cells that haven't been filled yet
                         if !filledCells.contains(cell.point) {
                             areaCells.append(cell)
                             filledCells.insert(cell.point)
@@ -348,25 +356,27 @@ class IsometricPathGrid: IsometricGrid {
             }
             
             if !areaCells.isEmpty {
-                let area = Area(
+                let area = Zone(
                     cells: areaCells,
                     side: fillSide,
                     startRow: areaCells.map { $0.point.row }.min() ?? currentAreaStartRow,
                     endRow: endRow
                 )
+
                 areas.append(area)
-                didAppendArea(area)
+                didAppendZone(area)
             }
         }
-        
-        // Clean up processed pending cells for the filled side up to endRow
+
         if fillSide == .left {
             let keysToRemove = pendingLeftCells.keys.filter { $0 <= endRow }
+
             for key in keysToRemove {
                 pendingLeftCells.removeValue(forKey: key)
             }
         } else {
             let keysToRemove = pendingRightCells.keys.filter { $0 <= endRow }
+
             for key in keysToRemove {
                 pendingRightCells.removeValue(forKey: key)
             }
@@ -380,8 +390,7 @@ class IsometricPathGrid: IsometricGrid {
             let step = steps.removeFirst()
             didRemoveStep(step)
         }
-        
-        // Remove areas that are no longer visible
+
         let areasToRemove = areas.filter { area in
             area.endRow <= row
         }
@@ -389,30 +398,28 @@ class IsometricPathGrid: IsometricGrid {
         for area in areasToRemove {
             if let index = areas.firstIndex(where: { $0.id == area.id }) {
                 areas.remove(at: index)
-                didRemoveArea(area)
-                
-                // Remove filled cells from the removed area
+                didRemoveZone(area)
+
                 for cell in area.cells {
                     filledCells.remove(cell.point)
                 }
             }
         }
-        
-        // Clean up pending cells for this row
+
         pendingLeftCells.removeValue(forKey: row)
         pendingRightCells.removeValue(forKey: row)
     }
     
-    // Helper methods for working with areas
-    func areasContaining(row: Int) -> [Area] {
+    // MARK: - Helper methods for working with areas
+    func areasContaining(row: Int) -> [Zone] {
         return areas.filter { $0.containsRow(row) }
     }
     
-    func areasOnSide(_ side: Side) -> [Area] {
+    func areasOnSide(_ side: Side) -> [Zone] {
         return areas.filter { $0.side == side }
     }
     
-    func area(withId id: UUID) -> Area? {
+    func area(withId id: UUID) -> Zone? {
         return areas.first { $0.id == id }
     }
 }

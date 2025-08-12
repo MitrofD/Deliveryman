@@ -138,7 +138,7 @@ class SpringMap: MapGrid, MapProtocol {
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
 
-        let springZone = SpringZone(zone: zone, cellSize: cellSize)
+        let springZone = SpringZone(zone: zone, cellSize: cellSize, pathSprites: pathSprites)
         gridNode.addChild(springZone)
         springZones[zone.id] = springZone
     }

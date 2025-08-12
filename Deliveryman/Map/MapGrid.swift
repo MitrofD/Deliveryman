@@ -22,9 +22,6 @@ fileprivate func getCorrectIndentFromIndent(_ indent: Grid.Indent, size: CGSize,
 }
 
 class MapGrid: IsometricGrid {
-    private var baseIndent: Indent
-    private var stepsByPoint: [Point: Step] = [:]
-    
     enum Side: String {
         case left
         case right
@@ -124,6 +121,9 @@ class MapGrid: IsometricGrid {
     private(set) var steps = [Step]()
     private(set) var zones = [Zone]()
     private(set) var side = Side.left
+    
+    private var baseIndent: Indent
+    private var stepsByPoint: [Point: Step] = [:]
 
     private var calcNextTurnPoint: () -> Void = { }
     private var centerColumn = Int.zero
@@ -294,16 +294,6 @@ class MapGrid: IsometricGrid {
         }
     }
     
-    private var lastTurn: Step? {
-        for step in steps.reversed() {
-            if (step.isTurn) {
-                return step
-            }
-        }
-
-        return nil
-    }
-    
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
         super.didAppendRow(row, cellsOfRow: cellsOfRow)
         
@@ -382,13 +372,12 @@ class MapGrid: IsometricGrid {
                 )
 
                 zones.append(area)
-                
-                // 🚀 OPTIMIZATION: Add to lookup cache
+
                 if zonesByStartRow[area.startRow] == nil {
                     zonesByStartRow[area.startRow] = []
                 }
+
                 zonesByStartRow[area.startRow]?.append(area)
-                
                 didAppendZone(area)
             }
         }
@@ -417,7 +406,6 @@ class MapGrid: IsometricGrid {
             didRemoveStep(step)
         }
 
-        // 🚀 OPTIMIZATION: O(1) lookup instead of O(n) filtering
         if let zonesAtThisRow = zonesByStartRow[row] {
             for zone in zonesAtThisRow {
                 if !zonesStartedExiting.contains(zone) {
@@ -425,34 +413,28 @@ class MapGrid: IsometricGrid {
                     willRemoveZone(zone)
                 }
             }
-            // Remove the cache entry as zones are no longer starting at this row
+
             zonesByStartRow.removeValue(forKey: row)
         }
-        
-        
-        // 🚀 НОВОЕ: Batch удаление зон за один проход - O(n)
+
         var indicesToRemove: [Int] = []
         var zonesToRemove: [Zone] = []
-        
-        // Собираем все индексы для удаления за один проход
+
         for (index, zone) in zones.enumerated() {
             if zone.endRow <= row {
                 indicesToRemove.append(index)
                 zonesToRemove.append(zone)
             }
         }
-        
-        // Удаляем элементы в обратном порядке, чтобы индексы не сбились
+
         for index in indicesToRemove.reversed() {
             zones.remove(at: index)
         }
-        
-        // Очищаем связанные данные
+
         for zone in zonesToRemove {
             zonesStartedExiting.remove(zone)
             didRemoveZone(zone)
-            
-            // Очищаем filledCells для этой зоны
+
             for cell in zone.cells {
                 filledCells.remove(cell.point)
             }

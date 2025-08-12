@@ -11,20 +11,30 @@ class SpringZone: SKNode {
     let zone: MapGrid.Zone
     let cellSize: CGSize
     let hasTarget: Bool
-    let adjacentPathPoints: [MapGrid.Point]
+    private let pathItems: [MapGrid.Point: SpringMap.PathItem]
+    private let adjacentAfterPathPoints: [MapGrid.Point]
+    private let adjacentTurnPathPoints: MapGrid.Point?
+    private let adjacentBeforePathPoints: [MapGrid.Point]
     
     private var cellNodes: [SKNode] = []
     
     // MARK: - Initialization
-    init(zone: MapGrid.Zone, cellSize: CGSize, pathSprites: [MapGrid.Point: SKNode], hasTarget: Bool = false) {
+    init(zone: MapGrid.Zone, cellSize: CGSize, pathItems: [MapGrid.Point: SpringMap.PathItem], hasTarget: Bool = false) {
         self.zone = zone
         self.cellSize = cellSize
         self.hasTarget = hasTarget
-        self.adjacentPathPoints =  Self.findAdjacentPathPoints(for: zone, from: pathSprites)
+        self.pathItems = pathItems
+        
+        let splitPathPoints =  Self.findAdjacentPathPoints(for: zone, from: pathItems)
+        self.adjacentAfterPathPoints = splitPathPoints.afterPoints
+        self.adjacentTurnPathPoints = splitPathPoints.turnPoint
+        self.adjacentBeforePathPoints = splitPathPoints.beforePoints
         
         super.init()
         setup()
         fill()
+        
+        print("\(adjacentAfterPathPoints) \(adjacentTurnPathPoints) \(adjacentBeforePathPoints)")
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -66,24 +76,33 @@ class SpringZone: SKNode {
     /// Находит прилегающие точки пути и соответствующие спрайты
     private static func findAdjacentPathPoints(
         for zone: MapGrid.Zone,
-        from pathSprites: [MapGrid.Point: SKNode]
-    ) -> [MapGrid.Point] {
+        from pathItems: [MapGrid.Point: SpringMap.PathItem]
+    ) -> (afterPoints: [MapGrid.Point], turnPoint: MapGrid.Point?, beforePoints: [MapGrid.Point]) {
+        var afterPoints: [MapGrid.Point] = []
+        var beforePoints: [MapGrid.Point] = []
+        var turnPoint: MapGrid.Point?
         
         // Получаем граничные точки зоны
-        let borderPoints = getBorderPoints(for: zone)
-        var points: [MapGrid.Point] = []
+        var borderPoints = getBorderPoints(for: zone)
+        borderPoints.removeFirst()
         
         // Для каждой граничной точки находим соответствующую точку пути
         for borderPoint in borderPoints {
             let pathPoint = getPathPoint(for: borderPoint, zoneSide: zone.side)
             
             // Проверяем, есть ли спрайт для этой точки пути
-            if pathSprites[pathPoint] != nil {
-                points.append(pathPoint)
+            if let pathItem = pathItems[pathPoint] {
+                if pathItem.step.isTurn {
+                    turnPoint = pathPoint
+                } else if (turnPoint != nil) {
+                    beforePoints.append(pathPoint)
+                } else {
+                    afterPoints.append(pathPoint)
+                }
             }
         }
         
-        return points
+        return (afterPoints: afterPoints, turnPoint: turnPoint, beforePoints: beforePoints)
     }
     
     /// Получает граничные точки зоны
@@ -106,7 +125,7 @@ class SpringZone: SKNode {
             }
         }
         
-        return borderPoints.sorted { $0.row < $1.row }
+        return borderPoints.sorted { $0.row > $1.row }
     }
     
     /// Получает точку пути для граничной точки зоны

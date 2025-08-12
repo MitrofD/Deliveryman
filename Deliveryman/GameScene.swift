@@ -26,7 +26,7 @@ class GameScene: SKScene {
     // MARK: - Map hooks
     private func onLoadedMapPreview(_ map: MapProtocol) {
         addChild(map)
-        map.preview()
+        map.play()
         /*
         let centerY = size.half.height
         

@@ -10,7 +10,7 @@ import SpriteKit
 class SpringMap: MapGrid, MapProtocol {
     private var tileSprites: [Point: SKNode] = [:]
     private var pathSprites: [Point: SKNode] = [:]
-    private var zoneSprites: [UUID: [SKNode]] = [:]
+    private var springZones: [UUID: SpringZone] = [:]
     
     required init(size: CGSize) {
         super.init(size: size, cellSize: .zero)
@@ -18,14 +18,6 @@ class SpringMap: MapGrid, MapProtocol {
     
     @MainActor required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    required init(textureAtlas: SKTextureAtlas, size: CGSize) {
-        fatalError("init(textureAtlas:size:) has not been implemented")
-    }
-    
-    required init(textureAtlas: SKTextureAtlas, size: CGSize, cellSize: CGSize) {
-        fatalError("init(textureAtlas:size:cellSize:) has not been implemented")
     }
     
     private func tileNodeForCell(_ cell: Cell) -> SKNode {
@@ -49,16 +41,6 @@ class SpringMap: MapGrid, MapProtocol {
         return node
     }
     
-    private func zoneNodeForCell(_ cell: Cell, area: Zone, color: UIColor) -> SKNode {
-        let node = SKShapeNode(circleOfRadius: cellSize.height / 2 / 2)
-        node.position = cell.position
-        node.strokeColor = .black
-        node.lineWidth = .zero
-        node.zPosition = CGFloat(cell.point.row + 1)
-        node.fillColor = color
-        return node
-    }
-    
     private func willResetedOrBuilt() {
         // Clean path
         pathSprites.values.forEach { node in
@@ -74,12 +56,12 @@ class SpringMap: MapGrid, MapProtocol {
 
         tileSprites.removeAll()
         
-        // Clean areas
-        zoneSprites.values.forEach { nodes in
-            nodes.forEach { $0.removeFromParent() }
+        // Clean zones
+        springZones.values.forEach { springZone in
+            springZone.removeFromParent()
         }
 
-        zoneSprites.removeAll()
+        springZones.removeAll()
     }
     
     // MARK: - MapProtocol
@@ -105,7 +87,7 @@ class SpringMap: MapGrid, MapProtocol {
     }
     
     func play() {
-        moveByStep(duration: 0.2)
+        moveByStep(duration: 0.1)
     }
     
     // MARK: - Overrides
@@ -155,24 +137,22 @@ class SpringMap: MapGrid, MapProtocol {
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
-        var nodes: [SKNode] = []
-        let color = UIColor.random
 
-        for cell in zone.cells {
-            let node = zoneNodeForCell(cell, area: zone, color: color)
-            gridNode.addChild(node)
-            nodes.append(node)
-        }
-        
-        zoneSprites[zone.id] = nodes
+        let springZone = SpringZone(zone: zone, cellSize: cellSize)
+        gridNode.addChild(springZone)
+        springZones[zone.id] = springZone
+    }
+    
+    override func willRemoveZone(_ zone: MapGrid.Zone) {
+        super.willRemoveZone(zone)
     }
         
     override func didRemoveZone(_ zone: Zone) {
         super.didRemoveZone(zone)
-        
-        if let nodes = zoneSprites[zone.id] {
-            nodes.forEach { $0.removeFromParent()}
-            zoneSprites.removeValue(forKey: zone.id)
+
+        if let springZone = springZones[zone.id] {
+            springZone.removeFromParent()
+            springZones.removeValue(forKey: zone.id)
         }
     }
 }

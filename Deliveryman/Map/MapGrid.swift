@@ -89,8 +89,9 @@ class MapGrid: IsometricGrid {
     func didAppendStep(_ step: Step) {}
     func didRemoveStep(_ step: Step) {}
     
-    // New methods for zones
+    // Zone lifecycle methods
     func didAppendZone(_ zone: Zone) {}
+    func willRemoveZone(_ zone: Zone) {}
     func didRemoveZone(_ zone: Zone) {}
     
     override var indent: Grid.Indent {
@@ -128,6 +129,10 @@ class MapGrid: IsometricGrid {
     private var pendingRightCells: [Int: [Cell]] = [:] // row -> [cells]
     private var filledCells: Set<Point> = [] // Track which cells are already filled
     
+    // Zone exit optimization
+    private var zonesStartedExiting: Set<UUID> = []
+    private var zonesByStartRow: [Int: [Zone]] = [:]  // O(1) lookup by start row
+    
     override init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(top: 1, right: .zero, bottom: .zero, left: .zero)) {
         self.baseIndent = indent
         super.init(size: size, cellSize: cellSize, indent: getCorrectIndentFromIndent(indent, size: size, cellSize: cellSize))
@@ -153,6 +158,8 @@ class MapGrid: IsometricGrid {
         pendingLeftCells.removeAll()
         pendingRightCells.removeAll()
         filledCells.removeAll()
+        zonesStartedExiting.removeAll()
+        zonesByStartRow.removeAll()
         prevStep = nil
         
         let maxColumns = self.maxColumns
@@ -364,6 +371,13 @@ class MapGrid: IsometricGrid {
                 )
 
                 areas.append(area)
+                
+                // 🚀 OPTIMIZATION: Add to lookup cache
+                if zonesByStartRow[area.startRow] == nil {
+                    zonesByStartRow[area.startRow] = []
+                }
+                zonesByStartRow[area.startRow]?.append(area)
+                
                 didAppendZone(area)
             }
         }
@@ -391,16 +405,31 @@ class MapGrid: IsometricGrid {
             didRemoveStep(step)
         }
 
-        let areasToRemove = areas.filter { area in
-            area.endRow <= row
+        // 🚀 OPTIMIZATION: O(1) lookup instead of O(n) filtering
+        if let zonesAtThisRow = zonesByStartRow[row] {
+            for zone in zonesAtThisRow {
+                if !zonesStartedExiting.contains(zone.id) {
+                    zonesStartedExiting.insert(zone.id)
+                    willRemoveZone(zone)
+                }
+            }
+            // Remove the cache entry as zones are no longer starting at this row
+            zonesByStartRow.removeValue(forKey: row)
         }
         
-        for area in areasToRemove {
-            if let index = areas.firstIndex(where: { $0.id == area.id }) {
+        // Find zones that are completely out of bounds
+        let zonesToRemove = areas.filter { zone in
+            zone.endRow <= row
+        }
+        
+        // Remove completely exited zones
+        for zone in zonesToRemove {
+            if let index = areas.firstIndex(where: { $0.id == zone.id }) {
                 areas.remove(at: index)
-                didRemoveZone(area)
+                zonesStartedExiting.remove(zone.id)
+                didRemoveZone(zone)
 
-                for cell in area.cells {
+                for cell in zone.cells {
                     filledCells.remove(cell.point)
                 }
             }

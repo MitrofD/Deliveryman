@@ -19,6 +19,7 @@
 		EF326EA92ACEBC8300E49C73 /* SKTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EA82ACEBC8300E49C73 /* SKTexture.swift */; };
 		EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EAC2ACEBD1700E49C73 /* NSCopying.swift */; };
 		EF326EB12ACEC13100E49C73 /* SKNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EB02ACEC13100E49C73 /* SKNode.swift */; };
+		EF3D3BC82E4B50CE00257F4A /* SpringZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3D3BC72E4B50C400257F4A /* SpringZone.swift */; };
 		EF4E36642AD75FE800C9A9AF /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF4E36632AD75FE800C9A9AF /* CGSize.swift */; };
 		EF500343293AB80E00BF9664 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF500342293AB80E00BF9664 /* extensions.swift */; };
 		EF544C172B2095FE000687F7 /* MinNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF544C162B2095FE000687F7 /* MinNumber.swift */; };
@@ -48,6 +49,7 @@
 		EF326EA82ACEBC8300E49C73 /* SKTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTexture.swift; sourceTree = "<group>"; };
 		EF326EAC2ACEBD1700E49C73 /* NSCopying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSCopying.swift; sourceTree = "<group>"; };
 		EF326EB02ACEC13100E49C73 /* SKNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKNode.swift; sourceTree = "<group>"; };
+		EF3D3BC72E4B50C400257F4A /* SpringZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpringZone.swift; sourceTree = "<group>"; };
 		EF4E36632AD75FE800C9A9AF /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		EF500342293AB80E00BF9664 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		EF544C162B2095FE000687F7 /* MinNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinNumber.swift; sourceTree = "<group>"; };
@@ -103,6 +105,7 @@
 		EF311DEB2E4960E9005678CE /* Spring */ = {
 			isa = PBXGroup;
 			children = (
+				EF3D3BC92E4B510900257F4A /* Zone */,
 				EF311DEA2E4960E9005678CE /* SpringMap.swift */,
 			);
 			path = Spring;
@@ -133,6 +136,14 @@
 				EF326EB02ACEC13100E49C73 /* SKNode.swift */,
 			);
 			path = extensions;
+			sourceTree = "<group>";
+		};
+		EF3D3BC92E4B510900257F4A /* Zone */ = {
+			isa = PBXGroup;
+			children = (
+				EF3D3BC72E4B50C400257F4A /* SpringZone.swift */,
+			);
+			path = Zone;
 			sourceTree = "<group>";
 		};
 		EF4E36622AD6A0E100C9A9AF /* base */ = {
@@ -318,6 +329,7 @@
 				EFFEDC052B188910009BAC70 /* Season.swift in Sources */,
 				EFA46DBB292C229400149F7A /* SKEase.swift in Sources */,
 				EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */,
+				EF3D3BC82E4B50CE00257F4A /* SpringZone.swift in Sources */,
 				EF311DE52E4960E4005678CE /* Grid.swift in Sources */,
 				EF311DE62E4960E4005678CE /* IsometricGrid.swift in Sources */,
 				EF311DEC2E4960E9005678CE /* SpringMap.swift in Sources */,

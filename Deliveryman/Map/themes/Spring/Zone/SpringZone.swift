@@ -55,12 +55,12 @@ class SpringZone {
         
         if adjacentAfterPathSteps.count > .zero {
             let lastIndex = adjacentAfterPathSteps.count - 1
-            var beforeBranch: PathType = .branchBeforeTurnLeft
-            var afterBranch: PathType = .branchAfterTurnRight
+            var beforeBranch: PathType = .branchBeforeLeft
+            var afterBranch: PathType = .branchAfterRight
             
             if zone.side == .right {
-                beforeBranch = .branchBeforeTurnRight
-                afterBranch = .branchAfterTurnLeft
+                beforeBranch = .branchBeforeRight
+                afterBranch = .branchAfterLeft
             }
             
             var prevBranch: PathType?
@@ -99,7 +99,7 @@ class SpringZone {
         // guard index >= 1 && index < adjacentAfterPathSteps.count - 1 else { return false }
         
         // Случайность (30% шанс)
-        let branchProbability: Float = 1 // 0.3
+        let branchProbability: Float = 0.3
         return Float.random(in: 0...1) <= branchProbability
     }
 

@@ -7,22 +7,21 @@
 
 import SpriteKit
 
-class SpringZone: SKNode {
+class SpringZone {
     // MARK: - Properties
     let zone: MapGrid.Zone
-    let cellSize: CGSize
+    
     let hasTarget: Bool
+
     private weak var map: SpringMap?
     private let adjacentAfterPathSteps: [MapGrid.Step]
     private let adjacentTurnPathStep: MapGrid.Step?
     private let adjacentBeforePathSteps: [MapGrid.Step]
-    
     private var cellNodes: [SKNode] = []
     
     // MARK: - Initialization
-    init(zone: MapGrid.Zone, cellSize: CGSize, map: SpringMap, hasTarget: Bool = false) {
+    init(zone: MapGrid.Zone, using map: SpringMap, hasTarget: Bool = false) {
         self.zone = zone
-        self.cellSize = cellSize
         self.hasTarget = hasTarget
         self.map = map
         
@@ -30,12 +29,9 @@ class SpringZone: SKNode {
         self.adjacentAfterPathSteps = splitPathSteps.afterSteps
         self.adjacentTurnPathStep = splitPathSteps.turnStep
         self.adjacentBeforePathSteps = splitPathSteps.beforeSteps
-        
-        super.init()
-        setup()
         fill()
         
-        print("After: \(adjacentAfterPathSteps), Turn: \(adjacentTurnPathStep != nil ? "Yes" : "No"), Before: \(adjacentBeforePathSteps)")
+        // print("After: \(adjacentAfterPathSteps), Turn: \(adjacentTurnPathStep != nil ? "Yes" : "No"), Before: \(adjacentBeforePathSteps)")
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -43,31 +39,24 @@ class SpringZone: SKNode {
     }
     
     // MARK: - Setup Methods
-    private func setup() {
-        // Используем естественные свойства зоны для имени
-        name = "SpringZone_\(zone.side.rawValue)_\(zone.startRow)"
-        isUserInteractionEnabled = false
-    }
     
     private func fill() {
-        cellNodes.removeAll()
-        removeAllChildren()
-        
+        guard let map = map else { return }
+
         let color = UIColor.random
         
         for cell in zone.cells {
-            let cellNode = createCellNode(for: cell, color: color)
-            addChild(cellNode)
-            cellNodes.append(cellNode)
+            let node = createNode(at: cell.point, size: map.cellSize, color: color)
+            map.tileNode(at: cell.point)?.addChild(node)
         }
     }
     
-    private func createCellNode(for cell: MapGrid.Cell, color: UIColor) -> SKNode {
-        let node = SKShapeNode(circleOfRadius: cellSize.height / 2 / 2)
-        node.position = cell.position
+    private func createNode(at point: MapGrid.Point, size: CGSize, color: UIColor) -> SKNode {
+        let node = SKShapeNode(circleOfRadius: size.height / 2 / 2)
+        node.position = .zero
         node.strokeColor = .black
         node.lineWidth = .zero
-        node.zPosition = CGFloat(cell.point.row + 1)
+        node.zPosition = CGFloat(point.row + 1)
         node.fillColor = color
         
         return node
@@ -117,6 +106,7 @@ class SpringZone: SKNode {
             if cellsByRow[cell.point.row] == nil {
                 cellsByRow[cell.point.row] = []
             }
+
             cellsByRow[cell.point.row]!.append(cell.point.column)
         }
 

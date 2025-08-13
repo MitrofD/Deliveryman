@@ -305,8 +305,7 @@ class MapGrid: IsometricGrid {
         generateAreaCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
         
         if isTurn {
-            let fillSide = side
-            fillAreaOnSide(endRow: row, fillSide: fillSide)
+            fillZoneOnSide(endRow: row, fillSide: side)
             currentZoneStartRow = row
             side = side.opposite
             calcNextTurnPoint()
@@ -348,37 +347,37 @@ class MapGrid: IsometricGrid {
         }
     }
     
-    private func fillAreaOnSide(endRow: Int, fillSide: Side) {
+    private func fillZoneOnSide(endRow: Int, fillSide: Side) {
         if endRow > currentZoneStartRow {
-            var areaCells: [Cell] = []
+            var zoneCells: [Cell] = []
 
             for (row, cells) in (fillSide == .left ? pendingLeftCells : pendingRightCells) {
                 if row <= endRow {
                     for cell in cells {
                         if !filledCells.contains(cell.point) {
-                            areaCells.append(cell)
+                            zoneCells.append(cell)
                             filledCells.insert(cell.point)
                         }
                     }
                 }
             }
             
-            if !areaCells.isEmpty {
-                let area = Zone(
-                    cells: areaCells,
+            if !zoneCells.isEmpty {
+                let zone = Zone(
+                    cells: zoneCells,
                     side: fillSide,
-                    startRow: areaCells.map { $0.point.row }.min() ?? currentZoneStartRow,
+                    startRow: zoneCells.map { $0.point.row }.min() ?? currentZoneStartRow,
                     endRow: endRow
                 )
 
-                zones.append(area)
+                zones.append(zone)
 
-                if zonesByStartRow[area.startRow] == nil {
-                    zonesByStartRow[area.startRow] = []
+                if zonesByStartRow[zone.startRow] == nil {
+                    zonesByStartRow[zone.startRow] = []
                 }
 
-                zonesByStartRow[area.startRow]?.append(area)
-                didAppendZone(area)
+                zonesByStartRow[zone.startRow]?.append(zone)
+                didAppendZone(zone)
             }
         }
 
@@ -444,7 +443,7 @@ class MapGrid: IsometricGrid {
         pendingRightCells.removeValue(forKey: row)
     }
     
-    // MARK: - Helper methods for working with areas
+    // MARK: - Helper methods for working with zones
     func zoneContaining(row: Int) -> [Zone] {
         return zones.filter { $0.containsRow(row) }
     }

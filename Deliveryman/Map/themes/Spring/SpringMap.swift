@@ -35,29 +35,24 @@ class SpringMap: MapGrid, MapProtocol {
         
         let texture = AtlasManager.shared.texture(named: pathName, atlas: "Paths", key: Self.themeName)
         let node = SKSpriteNode(texture: texture, size: cellSize)
-        node.position = step.position
+        node.position = .zero
         node.zPosition = CGFloat(step.point.row + 1)
 
         return node
     }
     
     private func willResetedOrBuilt() {
-        // Clean path nodes
-        pathNodes.values.forEach { node in
-            node.removeFromParent()
-        }
-        pathNodes.removeAll()
-        
-        // Clean ground
+        // Clean tiles
         tileNodes.values.forEach { node in
             node.removeFromParent()
         }
+
         tileNodes.removeAll()
+    
+        // Clean path nodes
+        pathNodes.removeAll()
         
         // Clean zones
-        zoneNodes.values.forEach { zone in
-            zone.removeFromParent()
-        }
         zoneNodes.removeAll()
     }
     
@@ -99,13 +94,13 @@ class SpringMap: MapGrid, MapProtocol {
     }
     
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
-        super.didAppendRow(row, cellsOfRow: cellsOfRow)
-    
         cellsOfRow.forEach { cell in
             let node = tileNodeForCell(cell)
             tileNodes[cell.point] = node
             gridNode.addChild(node)
         }
+        
+        super.didAppendRow(row, cellsOfRow: cellsOfRow)
     }
     
     override func didRemoveRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
@@ -121,27 +116,20 @@ class SpringMap: MapGrid, MapProtocol {
     
     override func didAppendStep(_ step: Step) {
         super.didAppendStep(step)
-        
+
         let node = pathNodeForStep(step)
-        gridNode.addChild(node)
-        pathNodes[step] = node // Step как ключ
+        pathNodes[step] = node
+        tileNode(at: step.point)?.addChild(node)
     }
     
     override func didRemoveStep(_ step: Step) {
         super.didRemoveStep(step)
-        
-        if let node = pathNodes[step] {
-            node.removeFromParent()
-            pathNodes.removeValue(forKey: step)
-        }
+        pathNodes.removeValue(forKey: step)
     }
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
-
-        let springZone = SpringZone(zone: zone, cellSize: cellSize, map: self)
-        gridNode.addChild(springZone)
-        zoneNodes[zone] = springZone
+        zoneNodes[zone] = SpringZone(zone: zone, using: self)
     }
     
     override func willRemoveZone(_ zone: MapGrid.Zone) {
@@ -150,10 +138,10 @@ class SpringMap: MapGrid, MapProtocol {
         
     override func didRemoveZone(_ zone: Zone) {
         super.didRemoveZone(zone)
-
-        if let springZone = zoneNodes[zone] {
-            springZone.removeFromParent()
-            zoneNodes.removeValue(forKey: zone)
-        }
+        zoneNodes.removeValue(forKey: zone)
+    }
+    
+    func tileNode(at point: MapGrid.Point) -> SKNode? {
+        return tileNodes[point]
     }
 }

@@ -28,8 +28,6 @@ class SpringZone {
         self.adjacentTurnPathStep = splitPathSteps.turnStep
         self.adjacentBeforePathSteps = splitPathSteps.beforeSteps
         fill()
-        
-        // print("After: \(adjacentAfterPathSteps), Turn: \(adjacentTurnPathStep != nil ? "Yes" : "No"), Before: \(adjacentBeforePathSteps)")
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -49,7 +47,7 @@ class SpringZone {
     }
     
     private func fillPath(map: SpringMap) {
-        for step in adjacentBeforePathSteps {
+        for step in adjacentAfterPathSteps {
             let stepName = PathType(step: step)
             let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
             map.tileNode(at: step.point)?.addChild(sprite)
@@ -101,7 +99,10 @@ class SpringZone {
         
         // Получаем граничные точки зоны
         var borderPoints = getBorderPoints(for: zone)
-        borderPoints.removeFirst()
+        
+        if let firstPoint = borderPoints.first, let firstStep = map.step(at: getPathPoint(for: firstPoint, zoneSide: zone.side)), firstStep.isTurn {
+            borderPoints.removeFirst()
+        }
         
         // Для каждой граничной точки находим соответствующий шаг пути
         for borderPoint in borderPoints {
@@ -147,7 +148,7 @@ class SpringZone {
     
     /// Получает точку пути для граничной точки зоны
     private static func getPathPoint(for borderPoint: MapGrid.Point, zoneSide: MapGrid.Side) -> MapGrid.Point {
-        let pathColumn: Int
+        var pathColumn: Int
         
         switch zoneSide {
         case .left:

@@ -10,7 +10,6 @@ import SpriteKit
 class SpringMap: MapGrid, MapProtocol {
     // MARK: - Properties
     private(set) var tileNodes: [Point: SKNode] = [:]
-    // private(set) var pathNodes: [Step: SKNode] = [:]
     private(set) var zoneNodes: [Zone: SpringZone] = [:]
     
     required init(size: CGSize) {
@@ -29,18 +28,6 @@ class SpringMap: MapGrid, MapProtocol {
         return node
     }
     
-    /*
-    private func pathNodeForStep(_ step: MapGrid.Step) -> SKNode {
-        let pathType = PathType(step: step)
-        let texture = AtlasManager.shared.texture(named: pathType.rawValue, atlas: "Paths", key: Self.themeName)
-        let node = SKSpriteNode(texture: texture, size: cellSize)
-        node.position = .zero
-        node.zPosition = CGFloat(step.point.row + 1)
-
-        return node
-    }
-    */
-    
     private func willResetedOrBuilt() {
         // Clean tiles
         tileNodes.values.forEach { node in
@@ -48,9 +35,6 @@ class SpringMap: MapGrid, MapProtocol {
         }
 
         tileNodes.removeAll()
-    
-        // Clean path nodes
-        // pathNodes.removeAll()
         
         // Clean zones
         zoneNodes.removeAll()
@@ -115,21 +99,6 @@ class SpringMap: MapGrid, MapProtocol {
             }
         }
     }
-    
-    /*
-    override func didAppendStep(_ step: Step) {
-        super.didAppendStep(step)
-
-        let node = pathNodeForStep(step)
-        pathNodes[step] = node
-        tileNode(at: step.point)?.addChild(node)
-    }
-    
-    override func didRemoveStep(_ step: Step) {
-        super.didRemoveStep(step)
-        pathNodes.removeValue(forKey: step)
-    }
-    */
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)

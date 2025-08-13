@@ -300,7 +300,7 @@ class MapGrid: IsometricGrid {
         prevStep?.next = step
         prevStep = step
         appendStep(step)
-        generateAreaCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
+        generateZoneCellsForRow(row, stepColumn: stepPoint.column, cellsOfRow: cellsOfRow)
         
         if isTurn {
             fillZoneOnSide(endRow: row, fillSide: side)
@@ -318,7 +318,7 @@ class MapGrid: IsometricGrid {
         didAppendStep(step)
     }
     
-    private func generateAreaCellsForRow(_ row: Int, stepColumn: Int, cellsOfRow: [Grid.Cell]) {
+    private func generateZoneCellsForRow(_ row: Int, stepColumn: Int, cellsOfRow: [Grid.Cell]) {
         var leftCells: [Cell] = []
         var rightCells: [Cell] = []
         

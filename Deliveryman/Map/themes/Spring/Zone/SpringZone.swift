@@ -47,19 +47,62 @@ class SpringZone {
     }
     
     private func fillPath(map: SpringMap) {
-        for step in adjacentAfterPathSteps {
-            let stepName = PathType(step: step)
-            let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
-            map.tileNode(at: step.point)?.addChild(sprite)
-        }
-        
         if let turnStep = adjacentTurnPathStep {
             let stepName = PathType(step: turnStep)
             let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
             map.tileNode(at: turnStep.point)?.addChild(sprite)
         }
+        
+        if adjacentAfterPathSteps.count > .zero {
+            let lastIndex = adjacentAfterPathSteps.count - 1
+            var beforeBranch: PathType = .branchBeforeTurnLeft
+            var afterBranch: PathType = .branchAfterTurnRight
+            
+            if zone.side == .right {
+                beforeBranch = .branchBeforeTurnRight
+                afterBranch = .branchAfterTurnLeft
+            }
+            
+            var prevBranch: PathType?
+            
+            for (index, step) in adjacentAfterPathSteps.enumerated()  {
+                var pathType = PathType(step: step)
+                
+                // Проверяем условия для ответвления
+                if shouldAddBranch(at: index, step: step) {
+                    if index == .zero {
+                        pathType = beforeBranch
+                    } else if index == lastIndex {
+                        if prevBranch != afterBranch {
+                            pathType = afterBranch
+                        }
+                    } else if let unwrappedPrevBranch = prevBranch {
+                        pathType = unwrappedPrevBranch == beforeBranch ? afterBranch : beforeBranch
+                    } else {
+                        pathType = [beforeBranch, afterBranch].randomElement()!
+                    }
+                    
+                    prevBranch = pathType
+                } else {
+                    prevBranch = nil
+                }
+
+                let sprite = stepSprite(named: pathType.rawValue, cellSize: map.cellSize)
+                map.tileNode(at: step.point)?.addChild(sprite)
+            }
+        }
     }
     
+    
+    
+    private func shouldAddBranch(at index: Int, step: MapGrid.Step) -> Bool {
+        // guard index >= 1 && index < adjacentAfterPathSteps.count - 1 else { return false }
+        
+        // Случайность (30% шанс)
+        let branchProbability: Float = 1 // 0.3
+        return Float.random(in: 0...1) <= branchProbability
+    }
+
     private func fill() {
         guard let map = map else {
             return

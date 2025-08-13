@@ -10,14 +10,12 @@ import SpriteKit
 class SpringZone {
     // MARK: - Properties
     let zone: MapGrid.Zone
-    
     let hasTarget: Bool
 
     private weak var map: SpringMap?
     private let adjacentAfterPathSteps: [MapGrid.Step]
     private let adjacentTurnPathStep: MapGrid.Step?
     private let adjacentBeforePathSteps: [MapGrid.Step]
-    private var cellNodes: [SKNode] = []
     
     // MARK: - Initialization
     init(zone: MapGrid.Zone, using map: SpringMap, hasTarget: Bool = false) {
@@ -40,8 +38,36 @@ class SpringZone {
     
     // MARK: - Setup Methods
     
+    private func stepSprite(named name: String, cellSize: CGSize) -> SKNode {
+        let texture = AtlasManager.shared.texture(named: name, atlas: "Paths", key: SpringMap.themeName)
+        let node = SKSpriteNode(texture: texture, size: cellSize)
+        node.name = name
+        node.position = .zero
+        node.zPosition = 1
+
+        return node
+    }
+    
+    private func fillPath(map: SpringMap) {
+        for step in adjacentBeforePathSteps {
+            let stepName = PathType(step: step)
+            let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
+            map.tileNode(at: step.point)?.addChild(sprite)
+        }
+        
+        if let turnStep = adjacentTurnPathStep {
+            let stepName = PathType(step: turnStep)
+            let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
+            map.tileNode(at: turnStep.point)?.addChild(sprite)
+        }
+    }
+    
     private func fill() {
-        guard let map = map else { return }
+        guard let map = map else {
+            return
+        }
+        
+        fillPath(map: map)
 
         let color = UIColor.random
         

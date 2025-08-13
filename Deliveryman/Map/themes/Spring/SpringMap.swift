@@ -4,12 +4,13 @@
 //
 //  Created by Dmitriy Mitrofansky on 04.08.25.
 //
+
 import SpriteKit
 
 class SpringMap: MapGrid, MapProtocol {
     // MARK: - Properties
     private(set) var tileNodes: [Point: SKNode] = [:]
-    private(set) var pathNodes: [Step: SKNode] = [:]
+    // private(set) var pathNodes: [Step: SKNode] = [:]
     private(set) var zoneNodes: [Zone: SpringZone] = [:]
     
     required init(size: CGSize) {
@@ -28,18 +29,17 @@ class SpringMap: MapGrid, MapProtocol {
         return node
     }
     
+    /*
     private func pathNodeForStep(_ step: MapGrid.Step) -> SKNode {
-        let pathName = step.isTurn
-            ? "turn_\(step.side.opposite.rawValue)"
-            : step.side.rawValue
-        
-        let texture = AtlasManager.shared.texture(named: pathName, atlas: "Paths", key: Self.themeName)
+        let pathType = PathType(step: step)
+        let texture = AtlasManager.shared.texture(named: pathType.rawValue, atlas: "Paths", key: Self.themeName)
         let node = SKSpriteNode(texture: texture, size: cellSize)
         node.position = .zero
         node.zPosition = CGFloat(step.point.row + 1)
 
         return node
     }
+    */
     
     private func willResetedOrBuilt() {
         // Clean tiles
@@ -50,7 +50,7 @@ class SpringMap: MapGrid, MapProtocol {
         tileNodes.removeAll()
     
         // Clean path nodes
-        pathNodes.removeAll()
+        // pathNodes.removeAll()
         
         // Clean zones
         zoneNodes.removeAll()
@@ -59,7 +59,9 @@ class SpringMap: MapGrid, MapProtocol {
     // MARK: - MapProtocol
     func loadPreviewAssets(_ completion: @escaping (any MapProtocol) -> Void) {
         AtlasManager.shared.loadAtlases(for: Self.themeName, atlasNames: ["Tiles", "Paths"]) { [weak self] _ in
-            guard let self = self else { return }
+            guard let self = self else {
+                return
+            }
 
             let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.themeName)
             let cellTextureSize = texture.size()
@@ -114,6 +116,7 @@ class SpringMap: MapGrid, MapProtocol {
         }
     }
     
+    /*
     override func didAppendStep(_ step: Step) {
         super.didAppendStep(step)
 
@@ -126,16 +129,13 @@ class SpringMap: MapGrid, MapProtocol {
         super.didRemoveStep(step)
         pathNodes.removeValue(forKey: step)
     }
+    */
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
         zoneNodes[zone] = SpringZone(zone: zone, using: self)
     }
-    
-    override func willRemoveZone(_ zone: MapGrid.Zone) {
-        super.willRemoveZone(zone)
-    }
-        
+
     override func didRemoveZone(_ zone: Zone) {
         super.didRemoveZone(zone)
         zoneNodes.removeValue(forKey: zone)

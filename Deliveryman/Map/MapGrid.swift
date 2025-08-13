@@ -179,9 +179,7 @@ class MapGrid: IsometricGrid {
         stepPoint.row = indent.bottom
         stepPoint.column = Int.random(in: indent.left..<maxColumns)
         side = stepPoint.column < centerColumn ? .right : .left
-        
         currentZoneStartRow = stepPoint.row
-
         calcNextTurnPoint()
     }
     

@@ -23,6 +23,7 @@
 		EF4E36642AD75FE800C9A9AF /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF4E36632AD75FE800C9A9AF /* CGSize.swift */; };
 		EF500343293AB80E00BF9664 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF500342293AB80E00BF9664 /* extensions.swift */; };
 		EF544C172B2095FE000687F7 /* MinNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF544C162B2095FE000687F7 /* MinNumber.swift */; };
+		EF89DA992E4CB6200001D5A6 /* PathType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA982E4CB61B0001D5A6 /* PathType.swift */; };
 		EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB6292C229400149F7A /* EasingDeclarations.swift */; };
 		EFA46DBA292C229400149F7A /* easing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB7292C229400149F7A /* easing.swift */; };
 		EFA46DBB292C229400149F7A /* SKEase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB8292C229400149F7A /* SKEase.swift */; };
@@ -53,6 +54,7 @@
 		EF4E36632AD75FE800C9A9AF /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		EF500342293AB80E00BF9664 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		EF544C162B2095FE000687F7 /* MinNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinNumber.swift; sourceTree = "<group>"; };
+		EF89DA982E4CB61B0001D5A6 /* PathType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathType.swift; sourceTree = "<group>"; };
 		EFA46DB6292C229400149F7A /* EasingDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EasingDeclarations.swift; sourceTree = "<group>"; };
 		EFA46DB7292C229400149F7A /* easing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = easing.swift; sourceTree = "<group>"; };
 		EFA46DB8292C229400149F7A /* SKEase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SKEase.swift; sourceTree = "<group>"; };
@@ -98,6 +100,7 @@
 		EF311DD22E495EB6005678CE /* enums */ = {
 			isa = PBXGroup;
 			children = (
+				EF89DA982E4CB61B0001D5A6 /* PathType.swift */,
 			);
 			path = enums;
 			sourceTree = "<group>";
@@ -330,6 +333,7 @@
 				EFA46DBB292C229400149F7A /* SKEase.swift in Sources */,
 				EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */,
 				EF3D3BC82E4B50CE00257F4A /* SpringZone.swift in Sources */,
+				EF89DA992E4CB6200001D5A6 /* PathType.swift in Sources */,
 				EF311DE52E4960E4005678CE /* Grid.swift in Sources */,
 				EF311DE62E4960E4005678CE /* IsometricGrid.swift in Sources */,
 				EF311DEC2E4960E9005678CE /* SpringMap.swift in Sources */,

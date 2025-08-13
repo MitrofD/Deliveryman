@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "branch_down_right.png",
+      "filename" : "branch_after_turn_right.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "branch_down_right@2x.png",
+      "filename" : "branch_after_turn_right@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "branch_down_right@3x.png",
+      "filename" : "branch_after_turn_right@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

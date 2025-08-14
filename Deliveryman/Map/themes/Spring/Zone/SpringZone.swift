@@ -83,10 +83,19 @@ class SpringZone {
                     }
                     
                     if let unwrappedPathType = pathType {
-                        prevBranchType = unwrappedPathType
-                        let sprite = stepSprite(named: unwrappedPathType.rawValue, cellSize: map.cellSize)
-                        map.tileNode(at: step.point)?.addChild(sprite)
-                        continue
+                        let branchElements = tryApplyBranch(using: map, for: step, branchType: unwrappedPathType)
+                                            
+                        // Если получили элементы для отрисовки, рисуем их
+                        if !branchElements.isEmpty {
+                            prevBranchType = unwrappedPathType
+                            
+                            // Отрисовываем все элементы ветки
+                            for (point, pathType) in branchElements {
+                                let sprite = stepSprite(named: pathType.rawValue, cellSize: map.cellSize)
+                                map.tileNode(at: point)?.addChild(sprite)
+                            }
+                            continue
+                        }
                     }
                 }
                 
@@ -95,6 +104,39 @@ class SpringZone {
                 map.tileNode(at: step.point)?.addChild(sprite)
             }
         }
+    }
+    
+    private func tryApplyBranch(using map: SpringMap, for step: MapGrid.Step, branchType: PathType) -> [MapGrid.Point: PathType] {
+        var branchElements: [MapGrid.Point: PathType] = [:]
+        branchElements[step.point] = branchType
+        
+        /*
+        switch branchType {
+        case .branchAfterLeft:
+            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.northWest) {
+                branchElements[endCell.point] = .branchAfterLeftEnd
+            }
+            
+        case .branchBeforeLeft:
+            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.southWest) {
+                branchElements[endCell.point] = .branchBeforeLeftEnd
+            }
+            
+        case .branchAfterRight:
+            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.northEast) {
+                branchElements[endCell.point] = .branchAfterRightEnd
+            }
+            
+        case .branchBeforeRight:
+            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.southEast) {
+                branchElements[endCell.point] = .branchBeforeRightEnd
+            }
+
+        default: break
+        }
+        */
+        
+        return branchElements
     }
     
     private func shouldAddBranch(at index: Int, step: MapGrid.Step) -> Bool {
@@ -197,10 +239,8 @@ class SpringZone {
         
         switch zoneSide {
         case .left:
-            // Для левой зоны путь находится на 1 колонку правее
             pathColumn = borderPoint.column + 1
         case .right:
-            // Для правой зоны путь находится на 1 колонку левее
             pathColumn = borderPoint.column - 1
         }
         

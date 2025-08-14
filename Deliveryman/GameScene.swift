@@ -17,10 +17,20 @@ class GameScene: SKScene {
     
     func mapSettings() {
         let mapSize = CGSize(width: size.width, height: size.height)
+        /*
+        let cellWidth = mapSize.width * 0.2
+        let cellSize = CGSize(width: cellWidth, height: cellWidth * 0.4)
+        let testMap = TestMap(size: mapSize, cellSize: cellSize)
+        testMap.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
+        addChild(testMap)
+        testMap.build()
+        testMap.moveByStep(duration: 1)
+        */
         let map = SpringMap(size: mapSize)
         currentMap = map
         map.position = CGPoint(x: (self.size.width - mapSize.width) / 2, y: (self.size.height - mapSize.height) / 2)
         map.loadPreviewAssets(onLoadedMapPreview)
+
     }
     
     // MARK: - Map hooks

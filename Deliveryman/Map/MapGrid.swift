@@ -8,7 +8,7 @@
 import SpriteKit
 
 fileprivate func getIndentTop(size: CGSize, cellSize: CGSize) -> Int {
-    let multiplicator = Int(3)
+    let multiplicator = Int(-3)
 
     guard cellSize.width > .zero else {
         return multiplicator
@@ -172,7 +172,7 @@ class MapGrid: IsometricGrid {
         stepsByPoint.removeAll()
         prevStep = nil
         
-        let maxColumns = self.maxColumns
+        let maxColumns = max(columnsForRow(.zero), columnsForRow(1))
         centerColumn = maxColumns / 2
         columnsRange = .zero..<maxColumns
         calcNextTurnPoint = maxColumns.isMultiple(of: 2) ? evenCalcNextTurnPoint : oddCalcNextTurnPoint

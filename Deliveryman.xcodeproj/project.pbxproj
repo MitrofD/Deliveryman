@@ -24,6 +24,7 @@
 		EF500343293AB80E00BF9664 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF500342293AB80E00BF9664 /* extensions.swift */; };
 		EF544C172B2095FE000687F7 /* MinNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF544C162B2095FE000687F7 /* MinNumber.swift */; };
 		EF89DA992E4CB6200001D5A6 /* PathType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA982E4CB61B0001D5A6 /* PathType.swift */; };
+		EF89DA9B2E4DD9AD0001D5A6 /* TestMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */; };
 		EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB6292C229400149F7A /* EasingDeclarations.swift */; };
 		EFA46DBA292C229400149F7A /* easing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB7292C229400149F7A /* easing.swift */; };
 		EFA46DBB292C229400149F7A /* SKEase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB8292C229400149F7A /* SKEase.swift */; };
@@ -55,6 +56,7 @@
 		EF500342293AB80E00BF9664 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		EF544C162B2095FE000687F7 /* MinNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinNumber.swift; sourceTree = "<group>"; };
 		EF89DA982E4CB61B0001D5A6 /* PathType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathType.swift; sourceTree = "<group>"; };
+		EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestMap.swift; sourceTree = "<group>"; };
 		EFA46DB6292C229400149F7A /* EasingDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EasingDeclarations.swift; sourceTree = "<group>"; };
 		EFA46DB7292C229400149F7A /* easing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = easing.swift; sourceTree = "<group>"; };
 		EFA46DB8292C229400149F7A /* SKEase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SKEase.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 		EF50033E293AA73B00BF9664 /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */,
 				EF311DEE2E4961A1005678CE /* themes */,
 				EF311DED2E496137005678CE /* protocols */,
 				EF311DD22E495EB6005678CE /* enums */,
@@ -341,6 +344,7 @@
 				EF311DE82E4960E4005678CE /* MapProtocol.swift in Sources */,
 				EFB7E2C62A2BF53C0026E378 /* UIDelegate.swift in Sources */,
 				EFBC266228ECE2EA005BCCDB /* AppDelegate.swift in Sources */,
+				EF89DA9B2E4DD9AD0001D5A6 /* TestMap.swift in Sources */,
 				EF326EA92ACEBC8300E49C73 /* SKTexture.swift in Sources */,
 				EF2B96952CA96F8A00FDFBA9 /* call-if-changed.swift in Sources */,
 				EFB7E2C42A2BF0FD0026E378 /* UI.swift in Sources */,

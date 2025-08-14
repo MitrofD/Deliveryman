@@ -32,23 +32,15 @@ class Grid: SKNode {
         }
     }
 
-    struct Direction {
-        let row: Int
-        let column: Int
-        
-        static let east = Self(row: .zero, column: 1)
-        static let north = Self(row: 2, column: .zero)
-        static let northEast = Self(row: 1, column: 1)
-        static let northWest = Self(row: 1, column: .zero)
-        static let south = Self(row: -2, column: .zero)
-        static let southEast = Self(row: -1, column: 1)
-        static let southWest = Self(row: -1, column: .zero)
-        static let west = Self(row: .zero, column: -1)
-
-        private init(row: Int, column: Int) {
-            self.row = row
-            self.column = column
-        }
+    enum Direction: String, CaseIterable {
+        case west
+        case east
+        case north
+        case south
+        case northWest
+        case northEast
+        case southWest
+        case southEast
     }
     
     struct Point: CustomStringConvertible, Hashable {
@@ -132,7 +124,18 @@ class Grid: SKNode {
     
     let gridNode = SKNode()
     
-    private(set) var cells = [[Cell]]()
+    lazy private var directionHandlers: [Direction: ((Point) -> Cell?)] = [
+        .east: self.eastCell,
+        .west: self.westCell,
+        .north: self.northCell,
+        .south: self.southCell,
+        .northEast: self.northEastCell,
+        .northWest: self.northWestCell,
+        .southEast: self.southEastCell,
+        .southWest: self.southWestCell
+    ]
+    
+    private var grid = [Int: [Cell]]()
     private(set) var isFilled = false
 
     private var appendToTop: () -> Void = {}
@@ -143,10 +146,11 @@ class Grid: SKNode {
     private var yStep = CGFloat.zero
     private var cachedColumnsCount: Int?
 
-    init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(1)) {
+    init(size: CGSize, cellSize: CGSize, indent: Indent = Indent(-1)) {
         self.cellSize = cellSize
         self.size = size
         self.indent = indent
+
         super.init()
         addChild(gridNode)
         
@@ -156,8 +160,9 @@ class Grid: SKNode {
         shape.position.x = size.width * 0.5
         shape.position.y = size.height * 0.5
         shape.fillColor = .red
-        shape.lineWidth = .zero
-        shape.alpha = 0.2
+        shape.lineWidth = 2
+        shape.strokeColor = .white
+        shape.alpha = 0.3
         shape.zPosition = 99
         addChild(shape)
         */
@@ -233,20 +238,20 @@ class Grid: SKNode {
         
         self.yStep = yPos / CGFloat(rowsCount)
         cachedColumnsCount = maxColumns
-        topCounter = -indent.bottom
+        topCounter = indent.bottom
     
         appendToTop = {
             var row = [Cell]()
-            let toColumn = self.columnsForRow(self.topCounter) + self.indent.right
+            let toColumn = self.columnsForRow(self.topCounter) + (self.indent.right * -1)
             
-            for column in -self.indent.left...toColumn {
+            for column in self.indent.left...toColumn {
                 let position = self.cellPositionForRow(self.topCounter, andColumn: column)
                 let cell = Cell(row: self.topCounter, column: column, position: position)
                 row.append(cell)
                 self.didAppendCell(cell)
             }
 
-            self.cells.append(row)
+            self.grid[self.topCounter] = row
             self.didAppendRow(self.topCounter, cellsOfRow: row)
             self.topCounter += 1
         }
@@ -255,21 +260,22 @@ class Grid: SKNode {
         
         appendToBottom = {
             var row = [Cell]()
-            let toColumn = self.columnsForRow(self.bottomCounter) + self.indent.right
+            let toColumn = self.columnsForRow(self.bottomCounter) + (self.indent.right * -1)
             
-            for column in -self.indent.left...toColumn {
+            for column in self.indent.left...toColumn {
                 let position = self.cellPositionForRow(self.bottomCounter, andColumn: column)
                 let cell = Cell(row: self.bottomCounter, column: column, position: position)
                 row.append(cell)
                 self.didAppendCell(cell)
             }
             
-            self.cells.insert(row, at: .zero)
+            // self.cells.insert(row, at: .zero)
+            self.grid[self.bottomCounter] = row
             self.didAppendRow(self.bottomCounter, cellsOfRow: row)
             self.bottomCounter -= 1
         }
 
-        for _ in -indent.bottom...rowsCount + indent.top  {
+        for _ in indent.bottom...rowsCount + (indent.top * -1)  {
             appendToTop()
         }
         
@@ -442,43 +448,62 @@ class Grid: SKNode {
     func stop() {
         gridNode.removeAction(forKey: Self.moveActionKey)
     }
-    // MARK: - Cell methods
 
-    func cell(atRow row: Int, column: Int) -> Cell? {
-        guard let rowCells = cells(atRow: row) else {
-            return nil
-        }
-        
-        guard rowCells.indices.contains(column) else {
-            return nil
-        }
-        
-        return rowCells[column]
+    // MARK: - Cell methods
+    func cell(for row: Int, column: Int) -> Cell? {
+        return grid[row]?[column - indent.left]
     }
     
-    func cells(atRow row: Int) -> [Cell]? {
-        let rowIndex = row - bottomCounter
-        
-        guard cells.indices.contains(rowIndex) else {
-            return nil
-        }
-        
-        return cells[rowIndex]
+    final func cell(for point: Point) -> Cell? {
+        return cell(for: point.row, column: point.column)
     }
     
-    func cellNeighbour(atRow row: Int, column: Int, direction: Direction) -> Cell? {
-        return cell(atRow: row + direction.row, column: column + direction.column)
+    final func cell(for cell: Cell) -> Cell? {
+        return self.cell(for: cell.point)
     }
     
-    func cellNeighbour(forCell cell: Cell, direction: Direction) -> Cell? {
-        return self.cell(atRow: cell.point.row + direction.row, column: cell.point.column + direction.column)
+    final func westCell(for point: Point) -> Cell? {
+        return cell(for: point.row, column: point.column - 1)
+    }
+    
+    final func eastCell(for point: Point) -> Cell? {
+        return cell(for: point.row, column: point.column + 1)
+    }
+    
+    final func southCell(for point: Point) -> Cell? {
+        return cell(for: point.row - 1, column: point.column)
+    }
+    
+    final func northCell(for point: Point) -> Cell? {
+        return cell(for: point.row + 1, column: point.column)
+    }
+    
+    final func northWestCell(for point: Point) -> Cell? {
+        return cell(for: point.row + 1, column: point.column - 1)
+    }
+    
+    final func northEastCell(for point: Point) -> Cell? {
+        return cell(for: point.row + 1, column: point.column + 1)
+    }
+    
+    final func southWestCell(for point: Point) -> Cell? {
+        return cell(for: point.row - 1, column: point.column - 1)
+    }
+    
+    final func southEastCell(for point: Point) -> Cell? {
+        return cell(for: point.row - 1, column: point.column + 1)
+    }
+    
+    final func cell(for point: Point, by direction: Direction) -> Cell? {
+        return directionHandlers[direction]!(point)
     }
     
     // MARK: - Private methods
     
     private func shiftTop() {
         let cellsOfRow: [Cell]
-
+        
+        /*
         if let row = cells.last {
             cellsOfRow = row
             row.forEach(didRemoveCell)
@@ -486,16 +511,27 @@ class Grid: SKNode {
         } else {
             cellsOfRow = []
         }
+        */
+        
+        topCounter -= 1
+        
+        if let row = grid[topCounter] {
+            cellsOfRow = row
+            row.forEach(didRemoveCell)
+            grid.removeValue(forKey: topCounter)
+        } else {
+            cellsOfRow = []
+        }
         
         appendToBottom()
-        topCounter -= 1
         didRemoveRow(topCounter, cellsOfRow: cellsOfRow)
         didStepped()
     }
 
     private func shiftBottom() {
         let cellsOfRow: [Cell]
-
+        
+        /*
         if let row = cells.first {
             cellsOfRow = row
             row.forEach(didRemoveCell)
@@ -503,9 +539,19 @@ class Grid: SKNode {
         } else {
             cellsOfRow = []
         }
+        */
+        
+        bottomCounter += 1
+        
+        if let row = grid[bottomCounter] {
+            cellsOfRow = row
+            row.forEach(didRemoveCell)
+            grid.removeValue(forKey: bottomCounter)
+        } else {
+            cellsOfRow = []
+        }
 
         appendToTop()
-        bottomCounter += 1
         didRemoveRow(bottomCounter, cellsOfRow: cellsOfRow)
         didStepped()
     }
@@ -520,6 +566,12 @@ class Grid: SKNode {
         yStep = .zero
         cachedColumnsCount = nil
         
+        for (row, cellsOfRow) in grid {
+            cellsOfRow.forEach(didRemoveCell)
+            didRemoveRow(row, cellsOfRow: cellsOfRow)
+        }
+        
+        /*
         cells.forEach { row in
             if let firstCell = row.first {
                 row.forEach { cell in
@@ -529,7 +581,8 @@ class Grid: SKNode {
                 didRemoveRow(firstCell.point.row, cellsOfRow: row)
             }
         }
+         */
         
-        cells = []
+        grid = [:]
     }
 }

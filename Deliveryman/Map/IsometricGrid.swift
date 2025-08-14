@@ -25,8 +25,4 @@ class IsometricGrid: Grid {
         let columns = super.columnsForRow(row)
         return row.isMultiple(of: 2) ? columns - 1 : columns
     }
-    
-    var maxColumns: Int {
-        return max(columnsForRow(.zero), columnsForRow(1))
-    }
 }

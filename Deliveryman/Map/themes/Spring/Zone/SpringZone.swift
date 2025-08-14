@@ -63,37 +63,39 @@ class SpringZone {
                 afterBranch = .branchAfterLeft
             }
             
-            var prevBranch: PathType?
+            var prevBranchType: PathType?
             
             for (index, step) in adjacentAfterPathSteps.enumerated()  {
-                var pathType = PathType(step: step)
-                
                 // Проверяем условия для ответвления
-                if shouldAddBranch(at: index, step: step) {
+                if shouldAddBranch(at: index, step: step) && prevBranchType == nil {
+                    var pathType: PathType?
+
                     if index == .zero {
                         pathType = beforeBranch
                     } else if index == lastIndex {
-                        if prevBranch != afterBranch {
+                        if prevBranchType != afterBranch {
                             pathType = afterBranch
                         }
-                    } else if let unwrappedPrevBranch = prevBranch {
-                        pathType = unwrappedPrevBranch == beforeBranch ? afterBranch : beforeBranch
+                    } else if let unwrappedPrevBranchType = prevBranchType {
+                        pathType = unwrappedPrevBranchType == beforeBranch ? afterBranch : beforeBranch
                     } else {
                         pathType = [beforeBranch, afterBranch].randomElement()!
                     }
                     
-                    prevBranch = pathType
-                } else {
-                    prevBranch = nil
+                    if let unwrappedPathType = pathType {
+                        prevBranchType = unwrappedPathType
+                        let sprite = stepSprite(named: unwrappedPathType.rawValue, cellSize: map.cellSize)
+                        map.tileNode(at: step.point)?.addChild(sprite)
+                        continue
+                    }
                 }
-
-                let sprite = stepSprite(named: pathType.rawValue, cellSize: map.cellSize)
+                
+                prevBranchType = nil
+                let sprite = stepSprite(named: PathType(step: step).rawValue, cellSize: map.cellSize)
                 map.tileNode(at: step.point)?.addChild(sprite)
             }
         }
     }
-    
-    
     
     private func shouldAddBranch(at index: Int, step: MapGrid.Step) -> Bool {
         // guard index >= 1 && index < adjacentAfterPathSteps.count - 1 else { return false }

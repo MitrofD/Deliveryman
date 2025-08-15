@@ -12,10 +12,10 @@ class SpringZone {
     let zone: MapGrid.Zone
     let hasTarget: Bool
 
-    private weak var map: SpringMap?
-    private let adjacentAfterPathSteps: [MapGrid.Step]
-    private let adjacentTurnPathStep: MapGrid.Step?
-    private let adjacentBeforePathSteps: [MapGrid.Step]
+    private let map: SpringMap
+    private let adjacentAfterSteps: [MapGrid.Step]
+    private let adjacentTurnStep: MapGrid.Step?
+    private let adjacentBeforeSteps: [MapGrid.Step]
     
     // MARK: - Initialization
     init(zone: MapGrid.Zone, using map: SpringMap, hasTarget: Bool = false) {
@@ -24,9 +24,9 @@ class SpringZone {
         self.map = map
         
         let splitPathSteps = Self.findAdjacentPathSteps(for: zone, using: map)
-        self.adjacentAfterPathSteps = splitPathSteps.afterSteps
-        self.adjacentTurnPathStep = splitPathSteps.turnStep
-        self.adjacentBeforePathSteps = splitPathSteps.beforeSteps
+        self.adjacentAfterSteps = splitPathSteps.afterSteps
+        self.adjacentTurnStep = splitPathSteps.turnStep
+        self.adjacentBeforeSteps = splitPathSteps.beforeSteps
         fill()
     }
     
@@ -36,130 +36,157 @@ class SpringZone {
     
     // MARK: - Setup Methods
     
-    private func stepSprite(named name: String, cellSize: CGSize) -> SKNode {
-        let texture = AtlasManager.shared.texture(named: name, atlas: "Paths", key: SpringMap.themeName)
-        let node = SKSpriteNode(texture: texture, size: cellSize)
-        node.name = name
+    private func stepSprite(variant: MapGrid.Step.Variant, cellSize: CGSize) -> SKNode {
+        let node: SKNode
+    
+        if let cachedNode = NodesPool.shared.get(key: SpringMap.mapName, ofType: variant.rawValue) {
+            node = cachedNode
+        } else {
+            print("Create \(variant.rawValue)")
+            let texture = AtlasManager.shared.texture(named: variant.rawValue, atlas: "Paths", key: SpringMap.mapName)
+            node = SKSpriteNode(texture: texture, size: cellSize)
+            node.name = variant.rawValue
+            NodesPool.shared.set(key: SpringMap.mapName, ofType: variant.rawValue, node: node)
+        }
+
         node.position = .zero
-        node.zPosition = 1
+        node.zPosition = 2
 
         return node
     }
     
-    private func fillPath(map: SpringMap) {
-        if let turnStep = adjacentTurnPathStep {
-            let stepName = PathType(step: turnStep)
-            let sprite = stepSprite(named: stepName.rawValue, cellSize: map.cellSize)
-            map.tileNode(at: turnStep.point)?.addChild(sprite)
+    private func fillPath() {
+        if let turnStep = adjacentTurnStep {
+            let sprite = stepSprite(variant: turnStep.variant, cellSize: map.cellSize)
+            map.tileNode(at: turnStep.cell.point)?.addChild(sprite)
         }
         
-        if adjacentAfterPathSteps.count > .zero {
-            let lastIndex = adjacentAfterPathSteps.count - 1
-            var beforeBranch: PathType = .branchBeforeLeft
-            var afterBranch: PathType = .branchAfterRight
+        if adjacentAfterSteps.count > .zero {
+            let lastIndex = adjacentAfterSteps.count - 1
+            var beforeBranchVariant: MapGrid.Step.Variant = .branchBeforeLeft
+            var afterBranchVariant: MapGrid.Step.Variant = .branchAfterRight
             
             if zone.side == .right {
-                beforeBranch = .branchBeforeRight
-                afterBranch = .branchAfterLeft
+                beforeBranchVariant = .branchBeforeRight
+                afterBranchVariant = .branchAfterLeft
             }
             
-            var prevBranchType: PathType?
+            var prevBranchVariant: MapGrid.Step.Variant?
             
-            for (index, step) in adjacentAfterPathSteps.enumerated()  {
+            for (index, step) in adjacentAfterSteps.enumerated()  {
                 // Проверяем условия для ответвления
-                if shouldAddBranch(at: index, step: step) && prevBranchType == nil {
-                    var pathType: PathType?
-
-                    if index == .zero {
-                        pathType = beforeBranch
-                    } else if index == lastIndex {
-                        if prevBranchType != afterBranch {
-                            pathType = afterBranch
-                        }
-                    } else if let unwrappedPrevBranchType = prevBranchType {
-                        pathType = unwrappedPrevBranchType == beforeBranch ? afterBranch : beforeBranch
-                    } else {
-                        pathType = [beforeBranch, afterBranch].randomElement()!
-                    }
+                if let branch = getBranch(
+                    at: index,
+                    lastIndex: lastIndex,
+                    step: step,
+                    beforeBranchVariant: beforeBranchVariant,
+                    afterBranchVariant: afterBranchVariant,
+                    prevBranchVariant: prevBranchVariant
+                ) {
+                    prevBranchVariant = branch.startBranchVariant
+                    step.variant = branch.startBranchVariant
                     
-                    if let unwrappedPathType = pathType {
-                        let branchElements = tryApplyBranch(using: map, for: step, branchType: unwrappedPathType)
-                                            
-                        // Если получили элементы для отрисовки, рисуем их
-                        if !branchElements.isEmpty {
-                            prevBranchType = unwrappedPathType
-                            
-                            // Отрисовываем все элементы ветки
-                            for (point, pathType) in branchElements {
-                                let sprite = stepSprite(named: pathType.rawValue, cellSize: map.cellSize)
-                                map.tileNode(at: point)?.addChild(sprite)
-                            }
-                            continue
-                        }
+                    for step in branch.steps {
+                        let sprite = stepSprite(variant: step.variant, cellSize: map.cellSize)
+                        map.tileNode(at: step.cell.point)?.addChild(sprite)
                     }
+
+                    continue
                 }
                 
-                prevBranchType = nil
-                let sprite = stepSprite(named: PathType(step: step).rawValue, cellSize: map.cellSize)
-                map.tileNode(at: step.point)?.addChild(sprite)
+                prevBranchVariant = nil
+                let sprite = stepSprite(variant: step.variant, cellSize: map.cellSize)
+                map.tileNode(at: step.cell.point)?.addChild(sprite)
             }
         }
     }
     
-    private func tryApplyBranch(using map: SpringMap, for step: MapGrid.Step, branchType: PathType) -> [MapGrid.Point: PathType] {
-        var branchElements: [MapGrid.Point: PathType] = [:]
-        branchElements[step.point] = branchType
+    private func getBranchSteps(
+        for step: MapGrid.Step,
+        startBranchVariant: MapGrid.Step.Variant
+    ) -> [MapGrid.Step]? {
+        var endStep: MapGrid.Step?
         
-        /*
-        switch branchType {
+        switch startBranchVariant {
         case .branchAfterLeft:
-            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.northWest) {
-                branchElements[endCell.point] = .branchAfterLeftEnd
+            if let cell = map.getNorthWestCell(for: step.cell.point) {
+                endStep = MapGrid.Step(cell: cell, variant: .branchAfterLeftEnd)
             }
             
         case .branchBeforeLeft:
-            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.southWest) {
-                branchElements[endCell.point] = .branchBeforeLeftEnd
+            if let cell = map.getSouthWestCell(for: step.cell.point) {
+                endStep = MapGrid.Step(cell: cell, variant: .branchBeforeLeftEnd)
             }
             
         case .branchAfterRight:
-            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.northEast) {
-                branchElements[endCell.point] = .branchAfterRightEnd
+            if let cell = map.getNorthEastCell(for: step.cell.point) {
+                endStep = MapGrid.Step(cell: cell, variant: .branchAfterRightEnd)
             }
             
         case .branchBeforeRight:
-            if let endCell = map.cellNeighbour(atCell: step, direction: Grid.Direction.southEast) {
-                branchElements[endCell.point] = .branchBeforeRightEnd
+            if let cell = map.getSouthEastCell(for: step.cell.point) {
+                endStep = MapGrid.Step(cell: cell, variant: .branchBeforeRightEnd)
             }
 
         default: break
         }
-        */
         
-        return branchElements
+        guard let unwrappedEndStep = endStep else { return nil }
+        
+        let startStep = MapGrid.Step(cell: step.cell, variant: startBranchVariant)
+        unwrappedEndStep.prev = startStep
+
+        return [startStep, unwrappedEndStep]
     }
     
-    private func shouldAddBranch(at index: Int, step: MapGrid.Step) -> Bool {
-        // guard index >= 1 && index < adjacentAfterPathSteps.count - 1 else { return false }
+    private func getBranch(
+        at index: Int,
+        lastIndex: Int,
+        step: MapGrid.Step,
+        beforeBranchVariant: MapGrid.Step.Variant,
+        afterBranchVariant: MapGrid.Step.Variant,
+        prevBranchVariant: MapGrid.Step.Variant?
+    ) -> (startBranchVariant: MapGrid.Step.Variant, steps: [MapGrid.Step])? {
+        guard lastIndex > .zero, prevBranchVariant == nil else { return nil }
         
         // Случайность (30% шанс)
-        let branchProbability: Float = 0.3
-        return Float.random(in: 0...1) <= branchProbability
+        let branchProbability = Float(0.3)
+    
+        guard Float.random(in: 0...1) <= branchProbability else {
+            return nil
+        }
+        
+        var startBranchVariant: MapGrid.Step.Variant?
+
+        if index == .zero {
+            startBranchVariant = beforeBranchVariant
+        } else if index == lastIndex {
+            if prevBranchVariant != afterBranchVariant {
+                startBranchVariant = afterBranchVariant
+            }
+        } else if let branchVariant = prevBranchVariant {
+            startBranchVariant = branchVariant == beforeBranchVariant ? afterBranchVariant : beforeBranchVariant
+        } else {
+            startBranchVariant = [beforeBranchVariant, afterBranchVariant].randomElement()!
+        }
+        
+        guard let unwrappedStartBranchVariant = startBranchVariant, let branchSteps = getBranchSteps(for: step, startBranchVariant: unwrappedStartBranchVariant) else {
+            return nil
+        }
+        
+        return (startBranchVariant: unwrappedStartBranchVariant, steps: branchSteps)
     }
 
     private func fill() {
-        guard let map = map else {
-            return
-        }
-        
-        fillPath(map: map)
-
+        fillPath()
+        /*
         let color = UIColor.random
         
         for cell in zone.cells {
             let node = createNode(at: cell.point, size: map.cellSize, color: color)
             map.tileNode(at: cell.point)?.addChild(node)
         }
+        */
     }
     
     private func createNode(at point: MapGrid.Point, size: CGSize, color: UIColor) -> SKNode {
@@ -167,7 +194,7 @@ class SpringZone {
         node.position = .zero
         node.strokeColor = .black
         node.lineWidth = .zero
-        node.zPosition = CGFloat(point.row + 1)
+        node.zPosition = 2
         node.fillColor = color
         
         return node
@@ -187,17 +214,17 @@ class SpringZone {
         // Получаем граничные точки зоны
         var borderPoints = getBorderPoints(for: zone)
         
-        if let firstPoint = borderPoints.first, let firstStep = map.step(at: getPathPoint(for: firstPoint, zoneSide: zone.side)), firstStep.isTurn {
+        if let firstPoint = borderPoints.first, let firstStep = map.step(at: getPathPoint(for: firstPoint, zoneSide: zone.side)), firstStep.variant.isTurn {
             borderPoints.removeFirst()
         }
         
         // Для каждой граничной точки находим соответствующий шаг пути
         for borderPoint in borderPoints {
-            let pathPoint = getPathPoint(for: borderPoint, zoneSide: zone.side)
+            let stepPoint = getPathPoint(for: borderPoint, zoneSide: zone.side)
             
             // Ищем шаг по точке среди всех шагов
-            if let step = map.step(at: pathPoint) {
-                if step.isTurn {
+            if let step = map.step(at: stepPoint) {
+                if step.variant.isTurn {
                     turnStep = step
                 } else if (turnStep != nil) {
                     beforeSteps.append(step)

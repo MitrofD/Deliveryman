@@ -36,22 +36,126 @@ class MapGrid: IsometricGrid {
         }
     }
     
-    class Step: Cell {
-        fileprivate(set) var side: Side
-        fileprivate(set) var isTurn = false
-        fileprivate(set) weak var next: Step?
-        fileprivate(set) weak var prev: Step?
-        
-        init(point: Point, position: CGPoint, side: Side, isTurn: Bool = false, prev: Step? = nil, next: Step? = nil) {
-            self.side = side
-            self.isTurn = isTurn
+    class Step: CustomStringConvertible {
+        enum Variant: String, CaseIterable {
+            // MARK: - Основные пути
+            case straightLeft = "straight_left"
+            case straightRight = "straight_right"
+            
+            // MARK: - Повороты
+            case turnLeft = "turn_left"
+            case turnRight = "turn_right"
+            
+            // MARK: - Ветки после поворота
+            case branchAfterLeft = "branch_after_left"
+            case branchAfterRight = "branch_after_right"
+            case branchAfterLeftEnd = "branch_after_left_end"
+            case branchAfterRightEnd = "branch_after_right_end"
+            
+            // MARK: - Ветки до поворота
+            case branchBeforeLeft = "branch_before_left"
+            case branchBeforeRight = "branch_before_right"
+            case branchBeforeLeftEnd = "branch_before_left_end"
+            case branchBeforeRightEnd = "branch_before_right_end"
+            
+            // MARK: - Computed Properties
+            
+            /// Сторона движения
+            var side: MapGrid.Side {
+                switch self {
+                case .straightLeft, .turnLeft, .branchAfterLeft, .branchAfterLeftEnd, .branchBeforeLeft, .branchBeforeLeftEnd:
+                    return .left
+                case .straightRight, .turnRight, .branchAfterRight, .branchAfterRightEnd, .branchBeforeRight, .branchBeforeRightEnd:
+                    return .right
+                }
+            }
+            
+            /// Является ли поворотом
+            var isTurn: Bool {
+                switch self {
+                case .turnLeft, .turnRight:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Является ли веткой (включая окончания)
+            var isBranch: Bool {
+                switch self {
+                case .branchAfterLeft, .branchAfterRight, .branchAfterLeftEnd, .branchAfterRightEnd,
+                     .branchBeforeLeft, .branchBeforeRight, .branchBeforeLeftEnd, .branchBeforeRightEnd:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Является ли началом ветки
+            var isBranchStart: Bool {
+                switch self {
+                case .branchAfterLeft, .branchAfterRight, .branchBeforeLeft, .branchBeforeRight:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Является ли окончанием ветки
+            var isBranchEnd: Bool {
+                switch self {
+                case .branchAfterLeftEnd, .branchAfterRightEnd, .branchBeforeLeftEnd, .branchBeforeRightEnd:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Является ли прямым путем
+            var isStraight: Bool {
+                switch self {
+                case .straightLeft, .straightRight:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Относится ли к периоду "после поворота"
+            var isAfterTurn: Bool {
+                switch self {
+                case .branchAfterLeft, .branchAfterRight, .branchAfterLeftEnd, .branchAfterRightEnd:
+                    return true
+                default:
+                    return false
+                }
+            }
+            
+            /// Относится ли к периоду "до поворота"
+            var isBeforeTurn: Bool {
+                switch self {
+                case .branchBeforeLeft, .branchBeforeRight, .branchBeforeLeftEnd, .branchBeforeRightEnd:
+                    return true
+                default:
+                    return false
+                }
+            }
+        }
+
+        weak var next: Step?
+        weak var prev: Step?
+        private(set) var cell: Cell
+        var variant: Variant
+
+        init(cell: Cell, variant: Variant, prev: Step? = nil, next: Step? = nil) {
+            self.cell = cell
+            self.variant = variant
             self.next = next
             self.prev = prev
-            super.init(point: point, position: position)
         }
         
-        override var description: String {
-            return "\(super.description), side: \(side), \(isTurn ? "turn" : "straight")"
+        var description: String {
+            return "Step(cell: \(cell.description), variant: \(variant))"
         }
     }
     
@@ -69,7 +173,7 @@ class MapGrid: IsometricGrid {
         }
         
         var description: String {
-            return "Area(side: \(side), rows: \(startRow)-\(endRow), cells: \(cells.count))"
+            return "Zone(side: \(side), rows: \(startRow)-\(endRow), cells: \(cells.count))"
         }
         
         var rowRange: ClosedRange<Int> {
@@ -113,8 +217,7 @@ class MapGrid: IsometricGrid {
     
     override var cellSize: CGSize {
         didSet {
-            let correctedIndent = getCorrectIndentFromIndent(baseIndent, size: size, cellSize: cellSize)
-            super.indent = correctedIndent
+            super.indent = getCorrectIndentFromIndent(baseIndent, size: size, cellSize: cellSize)
         }
     }
 
@@ -294,9 +397,17 @@ class MapGrid: IsometricGrid {
     
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
         super.didAppendRow(row, cellsOfRow: cellsOfRow)
-        
         let isTurn = stepPoint == turnPoint
-        let step = Step(point: stepPoint, position: cellPositionForRow(stepPoint.row, andColumn: stepPoint.column), side: side, isTurn: isTurn, prev: prevStep)
+        let stepVariant: Step.Variant
+        
+        if isTurn {
+            stepVariant = side == .left ? .turnRight : .turnLeft
+        } else {
+            stepVariant = side == .left ? .straightLeft : .straightRight
+        }
+        
+        let stepCell = Cell(point: stepPoint, position: cellPositionForRow(stepPoint.row, andColumn: stepPoint.column))
+        let step = Step(cell: stepCell, variant: stepVariant, prev: prevStep)
         prevStep?.next = step
         prevStep = step
         appendStep(step)
@@ -314,7 +425,7 @@ class MapGrid: IsometricGrid {
     
     private func appendStep(_ step: Step) {
         steps.append(step)
-        stepsByPoint[step.point] = step
+        stepsByPoint[step.cell.point] = step
         didAppendStep(step)
     }
     
@@ -399,7 +510,7 @@ class MapGrid: IsometricGrid {
         
         if !steps.isEmpty {
             let step = steps.removeFirst()
-            stepsByPoint.removeValue(forKey: step.point)
+            stepsByPoint.removeValue(forKey: step.cell.point)
             didRemoveStep(step)
         }
 

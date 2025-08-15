@@ -40,6 +40,7 @@ class AtlasManager {
             
             loadAtlas(named: fullAtlasName) { success in
                 completedCount += 1
+
                 if !success {
                     hasErrors = true
                 }

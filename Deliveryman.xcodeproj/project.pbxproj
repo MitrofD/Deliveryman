@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		EF2790212924655D00A59386 /* SpaghettiBoyCharacter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2790202924655D00A59386 /* SpaghettiBoyCharacter.swift */; };
 		EF28128E292305B0000E445B /* Character.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF28128D292305B0000E445B /* Character.swift */; };
+		EF28D5072E4F6BDF0055F7BC /* NodesPool.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF28D5062E4F6BD70055F7BC /* NodesPool.swift */; };
 		EF2B96952CA96F8A00FDFBA9 /* call-if-changed.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF2B96942CA96F8A00FDFBA9 /* call-if-changed.swift */; };
 		EF311DE52E4960E4005678CE /* Grid.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF311DDF2E4960E4005678CE /* Grid.swift */; };
 		EF311DE62E4960E4005678CE /* IsometricGrid.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF311DE02E4960E4005678CE /* IsometricGrid.swift */; };
@@ -17,14 +18,12 @@
 		EF311DEC2E4960E9005678CE /* SpringMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF311DEA2E4960E9005678CE /* SpringMap.swift */; };
 		EF311DF22E4A2457005678CE /* AtlasManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF311DF12E4A2456005678CE /* AtlasManager.swift */; };
 		EF326EA92ACEBC8300E49C73 /* SKTexture.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EA82ACEBC8300E49C73 /* SKTexture.swift */; };
-		EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EAC2ACEBD1700E49C73 /* NSCopying.swift */; };
 		EF326EB12ACEC13100E49C73 /* SKNode.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF326EB02ACEC13100E49C73 /* SKNode.swift */; };
 		EF3D3BC82E4B50CE00257F4A /* SpringZone.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF3D3BC72E4B50C400257F4A /* SpringZone.swift */; };
 		EF4E36642AD75FE800C9A9AF /* CGSize.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF4E36632AD75FE800C9A9AF /* CGSize.swift */; };
 		EF500343293AB80E00BF9664 /* extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF500342293AB80E00BF9664 /* extensions.swift */; };
 		EF544C172B2095FE000687F7 /* MinNumber.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF544C162B2095FE000687F7 /* MinNumber.swift */; };
-		EF89DA992E4CB6200001D5A6 /* PathType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA982E4CB61B0001D5A6 /* PathType.swift */; };
-		EF89DA9B2E4DD9AD0001D5A6 /* TestMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */; };
+		EF89DA992E4CB6200001D5A6 /* StepType.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF89DA982E4CB61B0001D5A6 /* StepType.swift */; };
 		EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB6292C229400149F7A /* EasingDeclarations.swift */; };
 		EFA46DBA292C229400149F7A /* easing.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB7292C229400149F7A /* easing.swift */; };
 		EFA46DBB292C229400149F7A /* SKEase.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA46DB8292C229400149F7A /* SKEase.swift */; };
@@ -35,12 +34,12 @@
 		EFBC266A28ECE2EA005BCCDB /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBC266928ECE2EA005BCCDB /* RootViewController.swift */; };
 		EFBC266F28ECE2EA005BCCDB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = EFBC266E28ECE2EA005BCCDB /* Assets.xcassets */; };
 		EFBC267228ECE2EA005BCCDB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = EFBC267028ECE2EA005BCCDB /* LaunchScreen.storyboard */; };
-		EFFEDC052B188910009BAC70 /* Season.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFEDC042B188910009BAC70 /* Season.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		EF2790202924655D00A59386 /* SpaghettiBoyCharacter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpaghettiBoyCharacter.swift; sourceTree = "<group>"; };
 		EF28128D292305B0000E445B /* Character.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Character.swift; sourceTree = "<group>"; };
+		EF28D5062E4F6BD70055F7BC /* NodesPool.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NodesPool.swift; sourceTree = "<group>"; };
 		EF2B96942CA96F8A00FDFBA9 /* call-if-changed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "call-if-changed.swift"; sourceTree = "<group>"; };
 		EF311DDF2E4960E4005678CE /* Grid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Grid.swift; sourceTree = "<group>"; };
 		EF311DE02E4960E4005678CE /* IsometricGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsometricGrid.swift; sourceTree = "<group>"; };
@@ -49,14 +48,12 @@
 		EF311DEA2E4960E9005678CE /* SpringMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpringMap.swift; sourceTree = "<group>"; };
 		EF311DF12E4A2456005678CE /* AtlasManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AtlasManager.swift; sourceTree = "<group>"; };
 		EF326EA82ACEBC8300E49C73 /* SKTexture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKTexture.swift; sourceTree = "<group>"; };
-		EF326EAC2ACEBD1700E49C73 /* NSCopying.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSCopying.swift; sourceTree = "<group>"; };
 		EF326EB02ACEC13100E49C73 /* SKNode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SKNode.swift; sourceTree = "<group>"; };
 		EF3D3BC72E4B50C400257F4A /* SpringZone.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpringZone.swift; sourceTree = "<group>"; };
 		EF4E36632AD75FE800C9A9AF /* CGSize.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGSize.swift; sourceTree = "<group>"; };
 		EF500342293AB80E00BF9664 /* extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extensions.swift; sourceTree = "<group>"; };
 		EF544C162B2095FE000687F7 /* MinNumber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinNumber.swift; sourceTree = "<group>"; };
-		EF89DA982E4CB61B0001D5A6 /* PathType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PathType.swift; sourceTree = "<group>"; };
-		EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestMap.swift; sourceTree = "<group>"; };
+		EF89DA982E4CB61B0001D5A6 /* StepType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StepType.swift; sourceTree = "<group>"; };
 		EFA46DB6292C229400149F7A /* EasingDeclarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EasingDeclarations.swift; sourceTree = "<group>"; };
 		EFA46DB7292C229400149F7A /* easing.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = easing.swift; sourceTree = "<group>"; };
 		EFA46DB8292C229400149F7A /* SKEase.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SKEase.swift; sourceTree = "<group>"; };
@@ -68,7 +65,6 @@
 		EFBC266928ECE2EA005BCCDB /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		EFBC266E28ECE2EA005BCCDB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		EFBC267128ECE2EA005BCCDB /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		EFFEDC042B188910009BAC70 /* Season.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Season.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +87,15 @@
 			path = Character;
 			sourceTree = "<group>";
 		};
+		EF28D5052E4F69CE0055F7BC /* managers */ = {
+			isa = PBXGroup;
+			children = (
+				EF28D5062E4F6BD70055F7BC /* NodesPool.swift */,
+				EF311DF12E4A2456005678CE /* AtlasManager.swift */,
+			);
+			path = managers;
+			sourceTree = "<group>";
+		};
 		EF2B96932CA96F5C00FDFBA9 /* utils */ = {
 			isa = PBXGroup;
 			children = (
@@ -102,7 +107,7 @@
 		EF311DD22E495EB6005678CE /* enums */ = {
 			isa = PBXGroup;
 			children = (
-				EF89DA982E4CB61B0001D5A6 /* PathType.swift */,
+				EF89DA982E4CB61B0001D5A6 /* StepType.swift */,
 			);
 			path = enums;
 			sourceTree = "<group>";
@@ -136,7 +141,6 @@
 			isa = PBXGroup;
 			children = (
 				EF326EA82ACEBC8300E49C73 /* SKTexture.swift */,
-				EF326EAC2ACEBD1700E49C73 /* NSCopying.swift */,
 				EF4E36632AD75FE800C9A9AF /* CGSize.swift */,
 				EF326EB02ACEC13100E49C73 /* SKNode.swift */,
 			);
@@ -163,7 +167,6 @@
 		EF50033E293AA73B00BF9664 /* Map */ = {
 			isa = PBXGroup;
 			children = (
-				EF89DA9A2E4DD9A40001D5A6 /* TestMap.swift */,
 				EF311DEE2E4961A1005678CE /* themes */,
 				EF311DED2E496137005678CE /* protocols */,
 				EF311DD22E495EB6005678CE /* enums */,
@@ -219,7 +222,7 @@
 		EFBC266028ECE2EA005BCCDB /* Deliveryman */ = {
 			isa = PBXGroup;
 			children = (
-				EF311DF12E4A2456005678CE /* AtlasManager.swift */,
+				EF28D5052E4F69CE0055F7BC /* managers */,
 				EF2B96932CA96F5C00FDFBA9 /* utils */,
 				EF326EA72ACEBC6200E49C73 /* extensions */,
 				EF50033E293AA73B00BF9664 /* Map */,
@@ -249,7 +252,6 @@
 		EFFEDC032B188828009BAC70 /* enums */ = {
 			isa = PBXGroup;
 			children = (
-				EFFEDC042B188910009BAC70 /* Season.swift */,
 			);
 			path = enums;
 			sourceTree = "<group>";
@@ -332,19 +334,17 @@
 				EF311DF22E4A2457005678CE /* AtlasManager.swift in Sources */,
 				EFBC266A28ECE2EA005BCCDB /* RootViewController.swift in Sources */,
 				EFA46DB9292C229400149F7A /* EasingDeclarations.swift in Sources */,
-				EFFEDC052B188910009BAC70 /* Season.swift in Sources */,
 				EFA46DBB292C229400149F7A /* SKEase.swift in Sources */,
-				EF326EAD2ACEBD1700E49C73 /* NSCopying.swift in Sources */,
 				EF3D3BC82E4B50CE00257F4A /* SpringZone.swift in Sources */,
-				EF89DA992E4CB6200001D5A6 /* PathType.swift in Sources */,
+				EF89DA992E4CB6200001D5A6 /* StepType.swift in Sources */,
 				EF311DE52E4960E4005678CE /* Grid.swift in Sources */,
 				EF311DE62E4960E4005678CE /* IsometricGrid.swift in Sources */,
 				EF311DEC2E4960E9005678CE /* SpringMap.swift in Sources */,
 				EF311DE72E4960E4005678CE /* MapGrid.swift in Sources */,
 				EF311DE82E4960E4005678CE /* MapProtocol.swift in Sources */,
 				EFB7E2C62A2BF53C0026E378 /* UIDelegate.swift in Sources */,
+				EF28D5072E4F6BDF0055F7BC /* NodesPool.swift in Sources */,
 				EFBC266228ECE2EA005BCCDB /* AppDelegate.swift in Sources */,
-				EF89DA9B2E4DD9AD0001D5A6 /* TestMap.swift in Sources */,
 				EF326EA92ACEBC8300E49C73 /* SKTexture.swift in Sources */,
 				EF2B96952CA96F8A00FDFBA9 /* call-if-changed.swift in Sources */,
 				EFB7E2C42A2BF0FD0026E378 /* UI.swift in Sources */,

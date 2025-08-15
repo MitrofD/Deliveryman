@@ -8,9 +8,17 @@
 import SpriteKit
 
 class SpringMap: MapGrid, MapProtocol {
+    class TileNode: SKSpriteNode {
+        func clear() {
+            children.forEach { $0.isHidden = true }
+        }
+    }
+
     // MARK: - Properties
-    private(set) var tileNodes: [Point: SKNode] = [:]
-    private(set) var zoneNodes: [Zone: SpringZone] = [:]
+    private var tileNodes = [Point: TileNode]()
+    private var mapZonesByZone = [Zone: SpringZone]()
+    private var cachedEvenTileNodes = [Int: TileNode]()
+    private var cachedOddTileNodes = [Int: TileNode]()
     
     required init(size: CGSize) {
         super.init(size: size, cellSize: .zero)
@@ -20,34 +28,19 @@ class SpringMap: MapGrid, MapProtocol {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func tileNodeForCell(_ cell: Cell) -> SKNode {
-        let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.themeName)
-        let node = SKSpriteNode(texture: texture, size: cellSize)
-        node.position = cell.position
-        node.zPosition = CGFloat(cell.point.row)
-        return node
-    }
-    
-    private func willResetedOrBuilt() {
-        // Clean tiles
-        tileNodes.values.forEach { node in
-            node.removeFromParent()
-        }
-
-        tileNodes.removeAll()
-        
-        // Clean zones
-        zoneNodes.removeAll()
+    private func tileNodeForCell(_ cell: Cell) -> TileNode {
+        let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.mapName)
+        return TileNode(texture: texture, size: cellSize)
     }
     
     // MARK: - MapProtocol
     func loadPreviewAssets(_ completion: @escaping (any MapProtocol) -> Void) {
-        AtlasManager.shared.loadAtlases(for: Self.themeName, atlasNames: ["Tiles", "Paths"]) { [weak self] _ in
+        AtlasManager.shared.loadAtlases(for: Self.mapName, atlasNames: ["Tiles", "Paths"]) { [weak self] _ in
             guard let self = self else {
                 return
             }
 
-            let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.themeName)
+            let texture = AtlasManager.shared.texture(named: "base", atlas: "Tiles", key: Self.mapName)
             let cellTextureSize = texture.size()
             let cellWidth = size.width / (CGFloat(5))
             let cellHeigth = cellWidth * (cellTextureSize.height / cellTextureSize.width)
@@ -65,7 +58,7 @@ class SpringMap: MapGrid, MapProtocol {
     }
     
     func play() {
-        moveByStep(duration: 0.1)
+        moveByStep(duration: 0.09)
     }
     
     // MARK: - Overrides
@@ -79,11 +72,47 @@ class SpringMap: MapGrid, MapProtocol {
         willResetedOrBuilt()
     }
     
+    private func resetCache() {
+        cachedEvenTileNodes.removeAll()
+        cachedOddTileNodes.removeAll()
+    }
+    
+    private func willResetedOrBuilt() {
+        // Clean tiles
+        tileNodes.values.forEach { node in
+            node.removeFromParent()
+        }
+
+        tileNodes.removeAll()
+        mapZonesByZone.removeAll()
+        
+        resetCache()
+    }
+    
     override func didAppendRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
+        let cachedTileSprites = isEvenRow(row) ? cachedEvenTileNodes : cachedOddTileNodes
+
         cellsOfRow.forEach { cell in
-            let node = tileNodeForCell(cell)
-            tileNodes[cell.point] = node
-            gridNode.addChild(node)
+            let tileNode: TileNode
+
+            if let cachedTileNode = cachedTileSprites[cell.point.column] {
+                cachedTileNode.clear()
+                tileNode = cachedTileNode
+            } else {
+                tileNode = tileNodeForCell(cell)
+                gridNode.addChild(tileNode)
+            }
+            
+            tileNode.position = cell.position
+            tileNode.zPosition = CGFloat(row)
+            /*
+            let labelNode = SKLabelNode(text: "\(cell.point)")
+            labelNode.fontSize = 10
+            labelNode.fontName = "Helvetica-Bold"
+            labelNode.zPosition = 100
+            node.addChild(labelNode)
+            */
+            tileNodes[cell.point] = tileNode
         }
         
         super.didAppendRow(row, cellsOfRow: cellsOfRow)
@@ -91,23 +120,30 @@ class SpringMap: MapGrid, MapProtocol {
     
     override func didRemoveRow(_ row: Int, cellsOfRow: [Grid.Cell]) {
         super.didRemoveRow(row, cellsOfRow: cellsOfRow)
+        var cachedTileSprites = [Int: TileNode]()
         
         cellsOfRow.forEach { cell in
             if let node = tileNodes[cell.point] {
-                node.removeFromParent()
+                cachedTileSprites[cell.point.column] = node
                 tileNodes.removeValue(forKey: cell.point)
             }
+        }
+        
+        if isEvenRow(row) {
+            cachedEvenTileNodes = cachedTileSprites
+        } else {
+            cachedOddTileNodes = cachedTileSprites
         }
     }
     
     override func didAppendZone(_ zone: Zone) {
         super.didAppendZone(zone)
-        zoneNodes[zone] = SpringZone(zone: zone, using: self)
+        mapZonesByZone[zone] = SpringZone(zone: zone, using: self)
     }
 
     override func didRemoveZone(_ zone: Zone) {
         super.didRemoveZone(zone)
-        zoneNodes.removeValue(forKey: zone)
+        mapZonesByZone.removeValue(forKey: zone)
     }
     
     func tileNode(at point: MapGrid.Point) -> SKNode? {

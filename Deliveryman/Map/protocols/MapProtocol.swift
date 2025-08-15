@@ -8,7 +8,7 @@
 import SpriteKit
 
 protocol MapProtocol: SKNode {
-    static var themeName: String { get }
+    static var mapName: String { get }
 
     init (size: CGSize)
     
@@ -20,7 +20,7 @@ protocol MapProtocol: SKNode {
 }
 
 extension MapProtocol {
-    static var themeName: String {
+    static var mapName: String {
         return String(describing: self) // Реализация по умолчанию
     }
 }

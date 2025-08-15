@@ -125,14 +125,14 @@ class Grid: SKNode {
     let gridNode = SKNode()
     
     lazy private var directionHandlers: [Direction: ((Point) -> Cell?)] = [
-        .east: self.eastCell,
-        .west: self.westCell,
-        .north: self.northCell,
-        .south: self.southCell,
-        .northEast: self.northEastCell,
-        .northWest: self.northWestCell,
-        .southEast: self.southEastCell,
-        .southWest: self.southWestCell
+        .east: self.getEastCell,
+        .west: self.getWestCell,
+        .north: self.getNorthCell,
+        .south: self.getSouthCell,
+        .northEast: self.getNorthEastCell,
+        .northWest: self.getNorthWestCell,
+        .southEast: self.getSouthEastCell,
+        .southWest: self.getSouthWestCell
     ]
     
     private var grid = [Int: [Cell]]()
@@ -450,52 +450,52 @@ class Grid: SKNode {
     }
 
     // MARK: - Cell methods
-    func cell(for row: Int, column: Int) -> Cell? {
+    func getCell(for row: Int, column: Int) -> Cell? {
         return grid[row]?[column - indent.left]
     }
     
-    final func cell(for point: Point) -> Cell? {
-        return cell(for: point.row, column: point.column)
+    final func getCell(for point: Point) -> Cell? {
+        return getCell(for: point.row, column: point.column)
     }
     
-    final func cell(for cell: Cell) -> Cell? {
-        return self.cell(for: cell.point)
+    final func getCell(for cell: Cell) -> Cell? {
+        return self.getCell(for: cell.point)
     }
     
-    final func westCell(for point: Point) -> Cell? {
-        return cell(for: point.row, column: point.column - 1)
-    }
-    
-    final func eastCell(for point: Point) -> Cell? {
-        return cell(for: point.row, column: point.column + 1)
-    }
-    
-    final func southCell(for point: Point) -> Cell? {
-        return cell(for: point.row - 1, column: point.column)
-    }
-    
-    final func northCell(for point: Point) -> Cell? {
-        return cell(for: point.row + 1, column: point.column)
-    }
-    
-    final func northWestCell(for point: Point) -> Cell? {
-        return cell(for: point.row + 1, column: point.column - 1)
-    }
-    
-    final func northEastCell(for point: Point) -> Cell? {
-        return cell(for: point.row + 1, column: point.column + 1)
-    }
-    
-    final func southWestCell(for point: Point) -> Cell? {
-        return cell(for: point.row - 1, column: point.column - 1)
-    }
-    
-    final func southEastCell(for point: Point) -> Cell? {
-        return cell(for: point.row - 1, column: point.column + 1)
-    }
-    
-    final func cell(for point: Point, by direction: Direction) -> Cell? {
+    final func getCell(for point: Point, by direction: Direction) -> Cell? {
         return directionHandlers[direction]!(point)
+    }
+    
+    func getWestCell(for point: Point) -> Cell? {
+        return getCell(for: point.row, column: point.column - 1)
+    }
+    
+    func getEastCell(for point: Point) -> Cell? {
+        return getCell(for: point.row, column: point.column + 1)
+    }
+    
+    func getSouthCell(for point: Point) -> Cell? {
+        return getCell(for: point.row - 1, column: point.column)
+    }
+    
+    func getNorthCell(for point: Point) -> Cell? {
+        return getCell(for: point.row + 1, column: point.column)
+    }
+    
+    func getNorthWestCell(for point: Point) -> Cell? {
+        return getCell(for: point.row + 1, column: point.column - 1)
+    }
+    
+    func getNorthEastCell(for point: Point) -> Cell? {
+        return getCell(for: point.row + 1, column: point.column + 1)
+    }
+    
+    func getSouthWestCell(for point: Point) -> Cell? {
+        return getCell(for: point.row - 1, column: point.column - 1)
+    }
+    
+    func getSouthEastCell(for point: Point) -> Cell? {
+        return getCell(for: point.row - 1, column: point.column + 1)
     }
     
     // MARK: - Private methods
